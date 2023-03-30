@@ -1,0 +1,10 @@
+[build-system]
+requires = ["setuptools>=43.0.0", "wheel", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 79
+skip-string-normalization = true
+
+[tool.setuptools_scm]
+write_to = "generaptor/__version__.py"

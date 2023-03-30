@@ -1,0 +1,81 @@
+#
+# Linux collector autoexec configuration
+#
+autoexec:
+  argv: ["artifacts", "collect", "-v", "Linux.Collector.Entrypoint", "--require_admin"]
+  artifact_definitions:
+    - name: Linux.Collector
+      parameters:
+        - name: Device
+          default: "{{ device }}"
+        - name: FileGlobs
+          type: hidden
+          default: |
+            Glob,Accessor
+{{ file_globs | indent(12, true) }}
+      sources:
+        - name: All File Metadata
+          query: |
+            LET rule_specs <= SELECT Glob
+              FROM parse_csv(filename=FileGlobs, accessor="data")
+              WHERE Accessor='file'
+              AND log(message="Selecting glob: " + Glob)
+
+            LET all_results <= SELECT * FROM Artifact.Generic.Collectors.File(
+              Root=Device,
+              Accessor="file",
+              collectionSpec=rule_specs
+            )
+
+            SELECT * FROM all_results WHERE _Source =~ "Metadata"
+
+    - name: Linux.Collector.Entrypoint
+      sources:
+        - name: Collection
+          query: |
+            -- retrieve host information
+            LET baseline <= SELECT Fqdn FROM info()
+
+            -- generate a random bytes array
+            LET random <= SELECT format(
+              format="%02x",
+              args=rand(range=255)
+            ) AS random_hex FROM range(end=25)
+
+            -- generate a password from random bytes array
+            LET secret <= SELECT join(
+              array=random.random_hex
+            ) AS value FROM scope()
+
+            -- store encrypted password in container metadata
+            LET container_metadata <= dict(
+              scheme="x509",
+              fingerprint_hex="{{ cert_fingerprint_hex }}",
+              b64_enc_secret=pk_encrypt(
+                scheme="x509",
+                data=secret.value,
+                public_key="{{ cert_data_pem_str }}"
+              )
+            )
+
+            -- perform artifacts collection
+            SELECT * FROM collect(
+              artifacts=[{{ artifacts }}],
+              output=regex_replace(
+                source=format(
+                  format="Collection_%s_%s_%s",
+                  args=[
+                    baseline[0].Fqdn,
+                    "{{ device }}",
+                    timestamp(epoch=now()).MarshalText
+                  ]
+                ),
+                re="[^0-9A-Za-z\\-_]",
+                replace="-"
+              ) + ".zip",
+              metadata=container_metadata,
+              password=secret.value,
+              format="json",
+              level=5
+            )
+

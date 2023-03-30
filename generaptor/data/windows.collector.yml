@@ -1,0 +1,160 @@
+# Adapted from https://github.com/Velocidex/velociraptor/blob/master/artifacts/definitions/Windows/KapeFiles/Targets.yaml
+autoexec:
+  argv: ["artifacts", "collect", "-v", "Windows.Collector.Entrypoint", "--require_admin"]
+  artifact_definitions:
+    - name: Windows.Collector
+      parameters:
+        - name: UseAutoAccessor
+          type: bool
+          default: {{ use_auto_accessor }}
+        - name: RootDevice
+        - name: VSSAnalysis
+          type: bool
+          default: {{ vss_analysis }}
+        - name: DontBeLazy
+          type: bool
+          default: {{ dont_be_lazy }}
+        - name: FileGlobs
+          type: hidden
+          default: |
+            Glob,Accessor
+{{ file_globs | indent(12, true) }}
+      sources:
+        - name: All File Metadata
+          query: |
+            LET ntfs_rule_specs <= SELECT Glob
+              FROM parse_csv(filename=FileGlobs, accessor="data")
+              WHERE Accessor='ntfs'
+              AND log(message="Selecting ntfs glob: " + Glob)
+
+            LET lazy_ntfs_rule_specs <= SELECT Glob
+              FROM parse_csv(filename=FileGlobs, accessor="data")
+              WHERE Accessor='lazy_ntfs'
+              AND log(message="Selecting auto glob: " + Glob)
+
+            LET all_results <= SELECT * FROM if(
+              condition=VSSAnalysis,
+              then={
+                SELECT * FROM chain(
+                  a={
+                    -- For VSS we always need to parse NTFS
+                    SELECT * FROM Artifact.Windows.Collectors.VSS(
+                      RootDevice=RootDevice,
+                      Accessor="ntfs",
+                      collectionSpec=ntfs_rule_specs
+                    )
+                  }, b={
+                    SELECT * FROM Artifact.Windows.Collectors.VSS(
+                      RootDevice=RootDevice,
+                      Accessor=if(
+                        condition=DontBeLazy,
+                        then="ntfs",
+                        else="lazy_ntfs"
+                      ),
+                      collectionSpec=lazy_ntfs_rule_specs)
+                    }
+                  )
+              }, else={
+                SELECT * FROM chain(
+                  a={
+                    -- Special files we access with the ntfs parser.
+                    SELECT * FROM Artifact.Generic.Collectors.File(
+                      Root=RootDevice,
+                      Accessor="ntfs",
+                      collectionSpec=ntfs_rule_specs
+                    )
+                  }, b={
+                    -- Prefer the auto accessor if possible since it
+                    -- will fall back to ntfs if required but otherwise
+                    -- will be faster.
+                    SELECT * FROM Artifact.Generic.Collectors.File(
+                      Root=RootDevice,
+                      Accessor=if(
+                        condition=UseAutoAccessor,
+                        then="auto",
+                        else="lazy_ntfs"
+                      ),
+                      collectionSpec=lazy_ntfs_rule_specs
+                    )
+                  }
+                )
+              }
+            )
+
+            SELECT * FROM all_results WHERE _Source =~ "Metadata"
+
+    - name: Windows.Collector.Entrypoint
+      parameters:
+        - name: SelectedDevice
+          default: "{{ device }}"
+      sources:
+        - name: Collection
+          query: |
+            -- retrieve host information
+            LET baseline <= SELECT Fqdn FROM info()
+
+            -- generate a random bytes array
+            LET random <= SELECT format(
+              format="%02x",
+              args=rand(range=255)
+            ) AS random_hex FROM range(end=25)
+
+            -- generate a password from random bytes array
+            LET secret <= SELECT join(
+              array=random.random_hex
+            ) AS value FROM scope()
+
+            -- store encrypted password in container metadata
+            LET container_metadata <= dict(
+              scheme="x509",
+              fingerprint_hex="{{ cert_fingerprint_hex }}",
+              b64_enc_secret=pk_encrypt(
+                scheme="x509",
+                data=secret.value,
+                public_key="{{ cert_data_pem_str }}"
+              )
+            )
+
+            -- iterate on host devices
+            SELECT * FROM foreach(
+              row={
+
+                -- select hardcoded device or scan host devices
+                SELECT RootDevice FROM if(
+                  condition=SelectedDevice!="",
+                  then={
+                    SELECT SelectedDevice AS RootDevice FROM scope()
+                  }, else={
+                    SELECT Device AS RootDevice FROM filesystems() WHERE Fstype="NTFS"
+                  }
+                )
+
+              },
+              query={
+
+                -- perform artifacts collection
+                SELECT * FROM collect(
+                  artifacts=[{{ artifacts }}],
+                  args=dict(
+                    `Windows.Collector`=dict(RootDevice=RootDevice)
+                  ),
+                  output=regex_replace(
+                    source=format(
+                      format="Collection_%s_%s_%s",
+                      args=[
+                        baseline[0].Fqdn,
+                        RootDevice,
+                        timestamp(epoch=now()).MarshalText
+                      ]
+                    ),
+                    re="[^0-9A-Za-z\\-_]",
+                    replace="-"
+                  ) + ".zip",
+                  metadata=container_metadata,
+                  password=secret.value,
+                  format="json",
+                  level=5
+                )
+
+              }
+            )
