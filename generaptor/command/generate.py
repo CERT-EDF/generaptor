@@ -48,20 +48,6 @@ def _generate_linux_cmd(args):
         LOGGER.warning("operation canceled.")
         return
     artifacts = ['Linux.Collector']
-    if args.extra:
-        artifacts += [
-            'Linux.Mounts',
-            'Linux.Ssh.KnownHosts',
-            'Linux.Ssh.AuthorizedKeys',
-            'Linux.Sys.Users',
-            'Linux.Sys.Pslist',
-            'Linux.Sys.Crontab',
-            'Linux.Sys.LastUserLogin',
-            'Linux.Proc.Arp',
-            'Linux.Proc.Modules',
-            'Linux.Syslog.SSHLogin',
-            'Linux.Network.Netstat',
-        ]
     Generator(
         Distribution(OperatingSystem.LINUX, Architecture(args.architecture)),
         args.cache,
@@ -95,15 +81,6 @@ def _generate_windows_cmd(args):
         LOGGER.warning("operation canceled.")
         return
     artifacts = ['Windows.Collector']
-    if args.extra:
-        artifacts += [
-            'Windows.Sys.Users',
-            'Windows.Packs.Persistence',
-            'Windows.System.Pslist',
-            'Windows.Network.ArpCache',
-            'Windows.Network.NetstatEnriched',
-            'Windows.Network.InterfaceAddresses',
-        ]
     Generator(
         Distribution(OperatingSystem.WINDOWS, Architecture(args.architecture)),
         args.cache,
@@ -135,12 +112,6 @@ def setup_generate(cmd):
         '--cp',
         type=Path,
         help="use given customization profile (non interactive)",
-    )
-    generate.add_argument(
-        '--extra',
-        '-e',
-        action='store_true',
-        help="run extra collectors depending on targeted platform",
     )
     generate.add_argument(
         '--output-directory',

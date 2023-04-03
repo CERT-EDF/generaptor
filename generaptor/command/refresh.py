@@ -8,7 +8,7 @@ from ..helper.distrib import SUPPORTED_DISTRIBUTIONS
 
 
 def _refresh_cmd(args):
-    if not confirm("Refreshing cache will flush current cache."):
+    if not (args.yes or confirm("Refreshing cache will flush current cache.")):
         return
     LOGGER.info("refreshing cache...")
     args.cache.flush(args.refresh_config, args.do_not_fetch)
@@ -40,6 +40,9 @@ def _refresh_cmd(args):
 def setup_refresh(cmd):
     """Setup refresh command"""
     refresh = cmd.add_parser('refresh', help="refresh environment cache")
+    refresh.add_argument(
+        '--yes', '-y', action='store_true', help="non-interactive confirmation"
+    )
     refresh.add_argument(
         '--refresh-config',
         action='store_true',
