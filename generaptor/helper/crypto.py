@@ -54,13 +54,12 @@ def pem_string(certificate: Certificate):
 def _provide_private_key_secret(
     ask_password: bool = False, raise_if_generate: bool = False
 ) -> str:
-    private_key_secret = None
-    if ask_password:
+    # attempt to load the secret from the environment
+    private_key_secret = getenv('GENERAPTOR_PK_SECRET')
+    # interactively ask the user for the secret if necessary
+    if not private_key_secret and ask_password:
         private_key_secret = getpass("private key secret: ")
-    # if not set by user before, attempt to load from environment
-    if not private_key_secret:
-        private_key_secret = getenv('GENERAPTOR_PK_SECRET')
-    # if not set by user and not in environment, generate one and print it
+    # generate and display the secret if necessary
     if not private_key_secret:
         if raise_if_generate:
             raise ValueError("failed to provide private key secret")
