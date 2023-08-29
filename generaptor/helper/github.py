@@ -1,9 +1,44 @@
 """Github helpers
 """
+import typing as t
+from dataclasses import dataclass
 from .http import http_get_json
 
 
-def github_latest_release(owner: str, repository: str):
+@dataclass
+class GithubAsset:
+    """Github asset data"""
+    name: str
+    size: int
+    url: str
+
+
+@dataclass
+class GithubRelease:
+    """Github release data"""
+    name: str
+    tag: str
+    assets: t.List[GithubAsset]
+
+    @classmethod
+    def from_dict(cls, dct):
+        return cls(
+            name=dct['name'],
+            tag=dct['tag_name'],
+            assets=[
+                GithubAsset(
+                    name=asset['name'],
+                    size=asset['size'],
+                    url=asset['browser_download_url']
+                )
+                for asset in dct['assets']
+            ],
+        )
+
+
+def github_release(
+    owner: str, repository: str, tag: str = 'latest'
+) -> GithubRelease:
     """Get a summary of the latest release published in a Github repository"""
     page = 1
     while page:
@@ -13,16 +48,10 @@ def github_latest_release(owner: str, repository: str):
             return None
         for release in releases:
             if release['draft'] or release['prerelease']:
-                page += 1
                 continue
-            return {
-                'name': release['name'],
-                'assets': [
-                    {
-                        'name': asset['name'],
-                        'size': asset['size'],
-                        'browser_download_url': asset['browser_download_url'],
-                    }
-                    for asset in release['assets']
-                ],
-            }
+            if tag == 'latest':
+                return GithubRelease.from_dict(release)
+            if tag == release['tag_name']:
+                return GithubRelease.from_dict(release)
+        page += 1
+    return None
