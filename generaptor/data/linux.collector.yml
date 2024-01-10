@@ -49,6 +49,8 @@ autoexec:
 
             -- store encrypted password in container metadata
             LET container_metadata <= dict(
+              hostname=baseline[0].Fqdn,
+              device="",
               scheme="x509",
               fingerprint_hex="{{ cert_fingerprint_hex }}",
               b64_enc_secret=pk_encrypt(
@@ -60,7 +62,10 @@ autoexec:
 
             -- perform artifacts collection
             SELECT * FROM collect(
-              artifacts=[{{ artifacts }}],
+              artifacts=[
+                "Linux.Collector",
+                "Linux.Network.Netstat"
+              ],
               output=regex_replace(
                 source=format(
                   format="Collection_%s_%s_%s",

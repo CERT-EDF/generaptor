@@ -4,7 +4,7 @@
 from argparse import ArgumentParser
 from .command import setup_commands
 from .__version__ import version
-from .helper.cache import Cache
+from .api import Cache
 from .helper.logging import LOGGER
 
 

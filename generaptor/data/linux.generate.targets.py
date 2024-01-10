@@ -13,6 +13,10 @@ DELIMITER = ','
 QUOTECHAR = '"'
 
 
+def dump_list(lst):
+    return dumps(sorted(lst), separators=(',',':'))
+
+
 def app():
     # parse rules
     group_ruleids = defaultdict(set)
@@ -38,8 +42,8 @@ def app():
         )
         csv_writer.writerow(['Group', 'RuleIds'])
         for group, ruleids in group_ruleids.items():
-            csv_writer.writerow([group, dumps(list(ruleids))])
-        csv_writer.writerow(['LinuxTriage', list(all_ruleids)])
+            csv_writer.writerow([group, dump_list(ruleids)])
+        csv_writer.writerow(['LinuxTriage', dump_list(all_ruleids)])
 
 
 if __name__ == '__main__':

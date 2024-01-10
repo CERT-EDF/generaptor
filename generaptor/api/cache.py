@@ -1,38 +1,32 @@
-"""Cache helpers
+"""Cache APIs
 """
 import typing as t
-from csv import reader
-from json import loads
 from shutil import copy
 from pathlib import Path
 from platform import system, architecture
 from dataclasses import dataclass
 from jinja2 import FileSystemLoader, Environment, Template
-from .logging import LOGGER
-from .distrib import Distribution, OperatingSystem, Architecture
+from .ruleset import RuleSet
+from .targetset import TargetSet
+from .distribution import Distribution, OperatingSystem, Architecture
+from ..helper.logging import LOGGER
 
 
-HERE = Path(__file__).resolve()
-PKG_DATA_DIR = HERE.parent.parent / 'data'
-PLATFORM_DISTRIB_MAP = {
-    'Linux': Distribution(OperatingSystem.LINUX, Architecture.AMD64),
-    'Windows': Distribution(OperatingSystem.WINDOWS, Architecture.AMD64),
+_HERE = Path(__file__).resolve()
+_PKG_DATA_DIR = _HERE.parent.parent / 'data'
+_PLATFORM_DISTRIBUTION_MAP = {
+    'Linux': Distribution(
+        operating_system=OperatingSystem.LINUX, architecture=Architecture.AMD64
+    ),
+    'Windows': Distribution(
+        operating_system=OperatingSystem.WINDOWS,
+        architecture=Architecture.AMD64,
+    ),
 }
 
 
-def _stream_csv(csv_filepath: Path):
-    with csv_filepath.open(newline='') as csv_fp:
-        csv_reader = reader(csv_fp, delimiter=',', quotechar='"')
-        try:
-            next(csv_reader)  # skip csv header
-        except StopIteration:
-            return
-        for row in csv_reader:
-            yield row
-
-
 def _copy_pkg_data_to_cache(pattern, cache_dir):
-    for src_path in PKG_DATA_DIR.glob(pattern):
+    for src_path in _PKG_DATA_DIR.glob(pattern):
         dst_path = cache_dir / src_path.name
         if not dst_path.is_file():
             copy(src_path, dst_path)
@@ -80,23 +74,21 @@ class Cache:
         _copy_pkg_data_to_cache('*.rules.csv', self.directory)
         return True
 
-    def load_rules(self, distrib: Distribution):
+    def load_rule_set(self, operating_system: OperatingSystem) -> RuleSet:
         """Load rules from cache matching given distribution"""
-        filepath = self.directory / f'{distrib.os.value}.rules.csv'
-        rules = {int(row[0]): row[1:] for row in _stream_csv(filepath)}
-        LOGGER.info("loaded %d rules.", len(rules))
-        return rules
+        filepath = self.directory / f'{operating_system.value}.rules.csv'
+        rule_set = RuleSet.from_filepath(filepath)
+        LOGGER.info("loaded %d rules", rule_set.count)
+        return rule_set
 
-    def load_targets(self, distrib: Distribution):
+    def load_target_set(self, operating_system: OperatingSystem) -> TargetSet:
         """Load targets from cache matching given distribution"""
-        filepath = self.directory / f'{distrib.os.value}.targets.csv'
-        targets = {}
-        for row in _stream_csv(filepath):
-            targets[row[0]] = set(loads(row[1]))
-        LOGGER.info("loaded %d targets.", len(targets))
-        return targets
+        filepath = self.directory / f'{operating_system.value}.targets.csv'
+        target_set = TargetSet.from_filepath(filepath)
+        LOGGER.info("loaded %d targets", target_set.count)
+        return target_set
 
-    def template_config(self, distrib: Distribution) -> Template:
+    def template_config(self, operating_system: OperatingSystem) -> Template:
         """Load jinja template matching given distribution"""
         loader = FileSystemLoader(self.directory)
         environment = Environment(
@@ -106,15 +98,17 @@ class Cache:
             lstrip_blocks=False,
             keep_trailing_newline=True,
         )
-        return environment.get_template(f'{distrib.os.value}.collector.yml')
+        return environment.get_template(
+            f'{operating_system.value}.collector.yml'
+        )
 
-    def template_binary(self, distrib: Distribution) -> t.Optional[Path]:
+    def template_binary(self, dist: Distribution) -> t.Optional[Path]:
         """Return template binary for distrib"""
         try:
-            return next(self.program.glob(f'*{distrib.suffix}'))
+            return next(self.program.glob(f'*{dist.suffix}'))
         except StopIteration:
             LOGGER.critical(
-                "distribution file not found in cache! Please update the cache."
+                "distribution file not found in cache! Please update the cache"
             )
             return None
 
@@ -123,8 +117,8 @@ class Cache:
         if architecture()[0] != '64bit':
             LOGGER.critical("current machine architecture is not supported!")
             return None
-        distrib = PLATFORM_DISTRIB_MAP.get(system())
-        if not distrib:
+        dist = _PLATFORM_DISTRIBUTION_MAP.get(system())
+        if not dist:
             LOGGER.critical("current machine distribution is not supported!")
             return None
-        return self.template_binary(distrib)
+        return self.template_binary(dist)

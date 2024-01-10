@@ -54,7 +54,7 @@ body:
         - Windows (10/11)
         - Other (Add in description)
     validations:
-      required: true
+      required: trye
   - type: dropdown
     id: python
     attributes:

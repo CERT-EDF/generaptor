@@ -1,32 +1,29 @@
 """get-fingerprint command
 """
 from pathlib import Path
+from ..api import Collection
 from ..helper.logging import LOGGER
-from ..helper.collection import collection_metadata
 
 
-def _print_collection_fingerprint(collection: Path):
-    metadata = collection_metadata(collection)
-    if not metadata:
-        LOGGER.error("failed to retrieve metadata from collection.")
+def _print_collection_fingerprint(filepath: Path):
+    collection = Collection(filepath=filepath)
+    fingerprint = collection.fingerprint
+    if not fingerprint:
+        LOGGER.error("failed to retrieve collection fingerprint")
         return
-    if 'fingerprint_hex' not in metadata:
-        LOGGER.error("metadata field not found: fingerprint_hex")
-        return
-    fingerprint_hex = metadata['fingerprint_hex']
-    print(f"{fingerprint_hex}:{collection}")
+    print(f"{fingerprint}:{filepath}")
 
 
 def _get_fingerprint_cmd(args):
-    for collection in args.collections:
-        if collection.is_file():
-            _print_collection_fingerprint(collection)
+    for filepath in args.collections:
+        if filepath.is_file():
+            _print_collection_fingerprint(filepath)
             continue
-        if collection.is_dir():
-            for item in collection.glob('Collection_*.zip'):
+        if filepath.is_dir():
+            for item in filepath.glob('Collection_*.zip'):
                 _print_collection_fingerprint(item)
             continue
-        LOGGER.warning("skipped %s", collection)
+        LOGGER.warning("skipped %s", filepath)
 
 
 def setup_get_fingerprint(cmd):

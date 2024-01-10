@@ -1,10 +1,57 @@
+[project]
+name = "generaptor"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["cli", "generator", "velociraptor", "offline", "triage"]
+description = "A generator for Velociraptor-based offline collectors"
+requires-python = ">=3.10"
+dynamic = ["version"]
+authors = [
+  { name="CERT-EDF", email="cert@edf.fr" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Utilities",
+    "Topic :: Security",
+]
+dependencies = [
+    "pick~=2.2",
+    "rich~=13.4",
+    "jinja2~=3.1",
+    "pyzipper~=0.3",
+    "cryptography~=41.0",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/cert-edf/generaptor"
+"Repository" = "https://github.com/cert-edf/generaptor"
+"Bug Tracker" = "https://github.com/cert-edf/generaptor/issues"
+
+
+[project.scripts]
+generaptor = "generaptor.main:app"
+
+
 [build-system]
-requires = ["setuptools>=43.0.0", "wheel", "setuptools_scm[toml]>=3.4"]
+requires = ["setuptools>=68", "setuptools_scm>=8.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["generaptor", "generaptor.*"]
+
+
+[tool.setuptools_scm]
+version_file = "generaptor/__version__.py"
+
 
 [tool.black]
 line-length = 79
 skip-string-normalization = true
-
-[tool.setuptools_scm]
-write_to = "generaptor/__version__.py"

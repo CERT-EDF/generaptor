@@ -18,7 +18,7 @@ from cryptography.x509 import (
     Name,
 )
 from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives.hashes import SHA256, SHA512
+from cryptography.hazmat.primitives.hashes import Hash, SHA256, SHA512
 from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
     BestAvailableEncryption,
@@ -34,8 +34,18 @@ from .logging import LOGGER
 
 
 VALIDITY = timedelta(days=30)
+CHUNK_SIZE = 8192
 RSA_KEY_SIZE = 4096
 RSA_PUBLIC_EXPONENT = 65537
+
+
+def checksum(filepath: Path) -> str:
+    """Compute the checksum"""
+    digest = Hash(SHA256())
+    with filepath.open('rb') as fstream:
+        while chunk := fstream.read(CHUNK_SIZE):
+            digest.update(chunk)
+    return digest.finalize().hex()
 
 
 def fingerprint(certificate: Certificate):
@@ -70,7 +80,9 @@ def _provide_private_key_secret(
 
 
 def _generate_self_signed_certificate(
-    output_directory: Path, ask_password: bool = False
+    output_directory: Path,
+    ask_password: bool = False,
+    private_key_secret: t.Optional[str] = None,
 ) -> Certificate:
     LOGGER.info("generating private key... please wait...")
     private_key = generate_private_key(
@@ -113,7 +125,9 @@ def _generate_self_signed_certificate(
     # ensure output directory exists
     output_directory.mkdir(parents=True, exist_ok=True)
     # retrieve private key password
-    private_key_secret = _provide_private_key_secret(ask_password=ask_password)
+    private_key_secret = private_key_secret or _provide_private_key_secret(
+        ask_password=ask_password
+    )
     # store encrypted private key in a file
     fingerprint_hex = fingerprint(certificate)
     (output_directory / f'{fingerprint_hex}.key.pem').write_bytes(
@@ -133,15 +147,21 @@ def _generate_self_signed_certificate(
     return certificate
 
 
+def load_certificate(cert_filepath: Path):
+    """Load certificate from filepath"""
+    crt_pem_bytes = cert_filepath.read_bytes()
+    return load_pem_x509_certificate(crt_pem_bytes)
+
+
 def provide_x509_certificate(
     output_directory: Path,
     cert_filepath: t.Optional[Path] = None,
     ask_password: bool = False,
+    private_key_secret: t.Optional[str] = None,
 ) -> str:
     """Provide x509 certificate"""
     if cert_filepath and cert_filepath.is_file():
-        crt_pem_bytes = cert_filepath.read_bytes()
-        certificate = load_pem_x509_certificate(crt_pem_bytes)
+        certificate = load_certificate(cert_filepath)
         LOGGER.info(
             "using certificate %s fingerprint %s",
             cert_filepath,
@@ -149,14 +169,17 @@ def provide_x509_certificate(
         )
     else:
         certificate = _generate_self_signed_certificate(
-            output_directory, ask_password
+            output_directory, ask_password, private_key_secret
         )
     return certificate
 
 
-def load_private_key(private_key_path: Path) -> t.Optional[RSAPrivateKey]:
+def load_private_key(
+    private_key_path: Path, private_key_secret: t.Optional[str] = None
+) -> t.Optional[RSAPrivateKey]:
+    """Load PEM encoded encrypted private key from file"""
     try:
-        private_key_secret = _provide_private_key_secret(
+        private_key_secret = private_key_secret or _provide_private_key_secret(
             ask_password=True, raise_if_generate=True
         )
     except (ValueError, KeyboardInterrupt):

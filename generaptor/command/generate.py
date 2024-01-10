@@ -1,43 +1,54 @@
 """generate command
 """
-from json import loads
+import typing as t
 from pathlib import Path
+from ..api import (
+    DEFAULT_OS_TARGETS_MAPPING,
+    RuleSet,
+    Collector,
+    Distribution,
+    Architecture,
+    CustomProfile,
+    CollectorConfig,
+    OperatingSystem,
+)
 from ..helper.crypto import provide_x509_certificate
 from ..helper.logging import LOGGER
-from ..helper.distrib import Distribution, Architecture, OperatingSystem
 from ..helper.validation import check_device
-from ..helper.generation import Generator
 
 
-def _load_custom_profile_targets(custom_profile):
-    try:
-        custom_profile = loads(custom_profile.read_text())
-        return custom_profile.get('targets')
-    except:
-        LOGGER.exception("failed to load custom profile!")
-    return None
-
-
-def _select_default_targets(args, default_targets):
+def _select_targets(args, operating_system: OperatingSystem):
+    default = DEFAULT_OS_TARGETS_MAPPING[operating_system]
     if args.custom:
-        return None
+        return []
     if args.custom_profile and args.custom_profile.is_file():
-        targets = _load_custom_profile_targets(args.custom_profile)
-        if not targets:
-            LOGGER.warning(
-                "failed to load custom profile, using default targets instead."
-            )
-            return default_targets
-        return targets
-    return default_targets
+        custom_profile = CustomProfile.from_filepath(args.custom_profile)
+        if custom_profile.targets:
+            return custom_profile.targets
+    return default
+
+
+def _rule_set_from_targets(
+    args, targets: t.List[str], operating_system: OperatingSystem
+) -> t.Optional[RuleSet]:
+    rule_set = args.cache.load_rule_set(operating_system)
+    target_set = args.cache.load_target_set(operating_system)
+    return target_set.select(rule_set, targets)
 
 
 def _generate_linux_cmd(args):
     LOGGER.info("starting linux collector generator...")
-    default_targets = _select_default_targets(args, ['LinuxTriage'])
     if not check_device(args.device):
         return
+    distribution = Distribution(
+        operating_system=OperatingSystem.LINUX,
+        architecture=Architecture(args.architecture),
+    )
+    targets = _select_targets(args, distribution.operating_system)
     try:
+        rule_set = _rule_set_from_targets(
+            args, targets, distribution.operating_system
+        )
         certificate = provide_x509_certificate(
             args.output_directory,
             args.x509_certificate,
@@ -47,30 +58,32 @@ def _generate_linux_cmd(args):
         print()
         LOGGER.warning("operation canceled.")
         return
-    artifacts = ['Linux.Collector']
-    Generator(
-        Distribution(OperatingSystem.LINUX, Architecture(args.architecture)),
-        args.cache,
-        certificate,
-        args.output_directory,
-    ).generate(
-        {
-            'device': args.device,
-            'artifacts': ','.join([f'"{artifact}"' for artifact in artifacts]),
-        },
-        default_targets,
+    config = CollectorConfig(
+        device=args.device,
+        rule_set=rule_set,
+        certificate=certificate,
+        distribution=distribution,
     )
+    collector = Collector(config=config)
+    collector.generate(args.cache, args.output_directory)
 
 
 def _generate_windows_cmd(args):
     LOGGER.info("starting windows collector generator...")
-    default_targets = _select_default_targets(args, ['KapeTriage'])
     if not check_device(args.device):
         return
     if args.device and not args.device.endswith(':'):
         LOGGER.warning("assuming device name is '%s:'", args.device)
         args.device += ':'
+    distribution = Distribution(
+        operating_system=OperatingSystem.WINDOWS,
+        architecture=Architecture(args.architecture),
+    )
+    targets = _select_targets(args, distribution.operating_system)
     try:
+        rule_set = _rule_set_from_targets(
+            args, targets, distribution.operating_system
+        )
         certificate = provide_x509_certificate(
             args.output_directory,
             args.x509_certificate,
@@ -80,22 +93,17 @@ def _generate_windows_cmd(args):
         print()
         LOGGER.warning("operation canceled.")
         return
-    artifacts = ['Windows.Collector']
-    Generator(
-        Distribution(OperatingSystem.WINDOWS, Architecture(args.architecture)),
-        args.cache,
-        certificate,
-        args.output_directory,
-    ).generate(
-        {
-            'device': args.device,
-            'artifacts': ','.join([f'"{artifact}"' for artifact in artifacts]),
-            'use_auto_accessor': 'N' if args.no_auto_accessor else 'Y',
-            'vss_analysis': 'N' if args.no_vss_analysis else 'Y',
-            'dont_be_lazy': 'Y' if args.dont_be_lazy else 'N',
-        },
-        default_targets,
+    config = CollectorConfig(
+        device=args.device,
+        rule_set=rule_set,
+        certificate=certificate,
+        distribution=distribution,
+        dont_be_lazy=args.dont_be_lazy,
+        vss_analysis_age=args.vss_analysis_age,
+        use_auto_accessor=(not args.no_auto_accessor),
     )
+    collector = Collector(config=config)
+    collector.generate(args.cache, args.output_directory)
 
 
 def setup_generate(cmd):
@@ -173,9 +181,10 @@ def setup_generate(cmd):
         help="disable auto accessor (which automatically select fastest collection technique)",
     )
     windows.add_argument(
-        '--no-vss-analysis',
-        action='store_true',
-        help="disable windows volume shadow copies analysis",
+        '--vss-analysis-age',
+        type=int,
+        default=0,
+        help="analyze VSS within this many days ago, 0 means no VSS analysis",
     )
     windows.add_argument(
         '--dont-be-lazy',

@@ -1,10 +1,10 @@
 """refresh command
 """
+from ..api import SUPPORTED_DISTRIBUTIONS
 from ..helper.http import http_set_proxies, http_download
 from ..helper.prompt import confirm
 from ..helper.github import github_release
 from ..helper.logging import LOGGER
-from ..helper.distrib import SUPPORTED_DISTRIBUTIONS
 
 
 def _refresh_cmd(args):
@@ -19,6 +19,9 @@ def _refresh_cmd(args):
     if args.proxy_url:
         http_set_proxies({'https': args.proxy_url})
     gh_release = github_release('velocidex', 'velociraptor', args.fetch_tag)
+    if not gh_release:
+        LOGGER.error("failed to find a valid realease for tag: %s", args.fetch_tag)
+        return
     LOGGER.info("velociraptor release matched: %s", gh_release.tag)
     downloaded = set()
     for asset in gh_release.assets:
@@ -55,7 +58,7 @@ def setup_refresh(cmd):
     )
     refresh.add_argument(
         '--fetch-tag',
-        default='v0.6.9',
+        default='v0.7.0',
         help=(
             "fetch this tag, use 'latest' to fetch the latest version, warning:"
             " fecthing another version than the default might break the collector"

@@ -1,6 +1,7 @@
 """Github helpers
 """
 import typing as t
+from operator import attrgetter
 from dataclasses import dataclass
 from .http import http_get_json
 
@@ -11,6 +12,7 @@ class GithubAsset:
     name: str
     size: int
     url: str
+    created_at: str
 
 
 @dataclass
@@ -22,17 +24,23 @@ class GithubRelease:
 
     @classmethod
     def from_dict(cls, dct):
+        """Contruct instance from dict"""
         return cls(
             name=dct['name'],
             tag=dct['tag_name'],
-            assets=[
-                GithubAsset(
-                    name=asset['name'],
-                    size=asset['size'],
-                    url=asset['browser_download_url']
-                )
-                for asset in dct['assets']
-            ],
+            assets=sorted(
+                [
+                    GithubAsset(
+                        name=asset['name'],
+                        size=asset['size'],
+                        url=asset['browser_download_url'],
+                        created_at=asset['created_at'],
+                    )
+                    for asset in dct['assets']
+                ],
+                key=attrgetter('created_at'),
+                reverse=True,
+            ),
         )
 
 

@@ -1,41 +1,41 @@
 """get-secret command
 """
 from pathlib import Path
-from ..helper.crypto import RSAPrivateKey, decrypt_secret, load_private_key
+from ..api import Collection
+from ..helper.crypto import RSAPrivateKey, load_private_key
 from ..helper.logging import LOGGER
-from ..helper.collection import collection_metadata
 
 
-def _print_collection_secret(private_key: RSAPrivateKey, collection: Path):
-    metadata = collection_metadata(collection)
-    if not metadata:
-        LOGGER.error("failed to retrieve metadata from collection.")
-        return
-    for field in ('b64_enc_secret', 'fingerprint_hex'):
-        if field not in metadata:
-            LOGGER.error("metadata field not found: %s", field)
-            return
+def _print_collection_secret(private_key: RSAPrivateKey, filepath: Path):
+    collection = Collection(filepath=filepath)
     LOGGER.info(
-        "collection certificate fingerprint: %s", metadata['fingerprint_hex']
+        "collection certificate fingerprint: %s", collection.fingerprint
     )
-    b64_enc_secret = metadata['b64_enc_secret']
-    secret = decrypt_secret(private_key, b64_enc_secret)
-    print(f"{secret.decode()}:{collection}")
+    try:
+        secret = collection.secret(private_key)
+    except ValueError:
+        LOGGER.error("Private key does not match collection archive")
+        return
+    print(f"{secret}:{filepath}")
 
 
 def _get_secret_cmd(args):
-    private_key = load_private_key(args.private_key)
+    try:
+        private_key = load_private_key(args.private_key)
+    except ValueError:
+        LOGGER.error("Invalid private key and/or passphrase")
+        return
     if not private_key:
         return
-    for collection in args.collections:
-        if collection.is_file():
-            _print_collection_secret(private_key, collection)
+    for filepath in args.collections:
+        if filepath.is_file():
+            _print_collection_secret(private_key, filepath)
             continue
-        if collection.is_dir():
-            for item in collection.glob('Collection_*.zip'):
+        if filepath.is_dir():
+            for item in filepath.glob('Collection_*.zip'):
                 _print_collection_secret(private_key, item)
             continue
-        LOGGER.warning("skipped %s", collection)
+        LOGGER.warning("skipped %s", filepath)
 
 
 def setup_get_secret(cmd):
