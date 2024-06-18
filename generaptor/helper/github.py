@@ -9,6 +9,7 @@ from .http import http_get_json
 @dataclass
 class GithubAsset:
     """Github asset data"""
+
     name: str
     size: int
     url: str
@@ -18,6 +19,7 @@ class GithubAsset:
 @dataclass
 class GithubRelease:
     """Github release data"""
+
     name: str
     tag: str
     assets: t.List[GithubAsset]

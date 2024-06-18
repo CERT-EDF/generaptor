@@ -47,19 +47,6 @@ autoexec:
               array=random.random_hex
             ) AS value FROM scope()
 
-            -- store encrypted password in container metadata
-            LET container_metadata <= dict(
-              hostname=baseline[0].Fqdn,
-              device="",
-              scheme="x509",
-              fingerprint_hex="{{ cert_fingerprint_hex }}",
-              b64_enc_secret=pk_encrypt(
-                scheme="x509",
-                data=secret.value,
-                public_key="{{ cert_data_pem_str }}"
-              )
-            )
-
             -- perform artifacts collection
             SELECT * FROM collect(
               artifacts=[
@@ -78,9 +65,20 @@ autoexec:
                 re="[^0-9A-Za-z\\-_]",
                 replace="-"
               ) + ".zip",
-              metadata=container_metadata,
+              metadata=dict(
+                hostname=baseline[0].Fqdn,
+                device="",
+                scheme="x509",
+                fingerprint_hex="{{ cert_fingerprint_hex }}",
+                b64_enc_secret=base64encode(
+                  string=pk_encrypt(
+                    scheme="x509",
+                    data=secret.value,
+                    public_key="{{ cert_data_pem_str }}"
+                  )
+                )
+              ),
               password=secret.value,
               format="json",
               level=5
             )
-

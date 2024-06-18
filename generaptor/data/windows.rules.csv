@@ -10,7 +10,7 @@ Id,Name,Category,Glob,Accessor,Comment
 9,Avira Activity Logs,Antivirus,ProgramData\Avira\Antivirus\LOGFILES\**10,lazy_ntfs,Collects the scan logs of Avira Antivirus
 10,Bitdefender Endpoint Security Logs,Antivirus,ProgramData\Bitdefender\Endpoint Security\Logs\**10,lazy_ntfs,
 11,Bitdefender Internet Security Logs,Antivirus,ProgramData\Bitdefender\Desktop\Profiles\Logs\**10,lazy_ntfs,
-12,Bitdefender SQLite DB Files,Antivirus,Program Files*\Bitdefender*\**10\regex:*.+\.(db|db-wal|db-shm),ntfs,Bitdefender SQLite databases
+12,Bitdefender SQLite DB Files,Antivirus,"Program Files*\Bitdefender*\**10\*.{db,db-wal,db-shm}",ntfs,Bitdefender SQLite databases
 13,ComboFix,Antivirus,ComboFix.txt,lazy_ntfs,
 14,Cybereason Anti-Ransomware Logs,Antivirus,ProgramData\crs1\Logs\**10,lazy_ntfs,
 15,Cybereason Sensor Communications and Anti-Malware Logs,Antivirus,ProgramData\apv2\Logs\**10,lazy_ntfs,
@@ -177,7 +177,7 @@ Id,Name,Category,Glob,Accessor,Comment
 176,Windows 10 Notification DB,SQLDatabases,Users\*\AppData\Local\Microsoft\Windows\Notifications\appdb.dat,lazy_ntfs,
 177,ActivitiesCache.db,SQLDatabases,Users\*\AppData\Local\ConnectedDevicesPlatform\*\ActivitiesCache.db*,lazy_ntfs,
 178,Update Store.db,OS Upgrade,ProgramData\USOPrivate\UpdateStore\store.db,lazy_ntfs,
-179,Bitdefender SQLite DB Files,Antivirus,Program Files*\Bitdefender*\**10\regex:*.+\.(db|db-wal|db-shm),ntfs,Bitdefender SQLite databases
+179,Bitdefender SQLite DB Files,Antivirus,"Program Files*\Bitdefender*\**10\*.{db,db-wal,db-shm}",ntfs,Bitdefender SQLite databases
 180,EventTranscript.db,SystemEvents,ProgramData\Microsoft\Diagnosis\EventTranscript\EventTranscript.db*,lazy_ntfs,
 181,EventTranscript.db,SystemEvents,Windows.old\ProgramData\Microsoft\Diagnosis\EventTranscript\EventTranscript.db*,lazy_ntfs,
 182,Bookmarks,Communications,Users\*\AppData\Local\BraveSoftware\Brave-Browser\User Data\*\Bookmarks*,lazy_ntfs,
@@ -329,14 +329,14 @@ Id,Name,Category,Glob,Accessor,Comment
 328,Puffin - Cookies,Communications,Users\*\AppData\Local\PuffinSecureBrowser\cookies.dat,lazy_ntfs,Grabs a file that stores information related to cookies
 329,Puffin - Image Cache,Communications,Users\*\AppData\Local\PuffinSecureBrowser\image_cache\**10,lazy_ntfs,Grabs a directory that caches images from websites visited
 330,AppData,UserData,Users\*\AppData\**10,lazy_ntfs,
-331,Audio files,Multimedia,**10\regex:*.+\.(3gp|aa|aac|act|aiff|alac|amr|ape|au|awb|dss|dvf|flac|gsm|iklax|ivs|m4a|m4b|m4p|mmf|mp3|mpc|msv|nmf|ogg|oga|mogg|opus|ra|rm|raw|rf64|sln|tta|voc|vox|wav|wma|wv|webm),ntfs,Covers most (if not all) audio file formats
-332,Excel and Excel-like Documents,Documents,**10\regex:*.+\.(xls|xlsx|csv|tsv|xlt|xlm|xlsm|xltx|xltm|xlsb|xla|xlam|xll|xlw|ods|fodp|qpw),ntfs,"Covers all document file formats for Excel, OpenOffice, LibreOffice, Apache OpenOffice, WPS Office, SoftMaker Office, and more"
-333,PDF and PDF-like Documents,Documents,**10\regex:*.+\.(pdf|xps|oxps),ntfs,Covers all PDF and PDF-like document formats
-334,Picture files,Multimedia,**10\regex:*.+\.(ai|bmp|bpg|cdr|cpc|eps|exr|flif|gif|heif|ilbm|ima|jp2|j2k|jpf|jpm|jpg2|j2c|jpc|jpx|mj2jpeg|jpg|jxl|kra|ora|pcx|pgf|pgm|png|pnm|ppm|psb|psd|psp|svg|tga|tiff|webp|xaml|xcf),ntfs,Covers most (if not all) picture file formats
-335,SQLite Files (.db* and .sqlite*),Databases,**10\regex:*.+\.(db*|sqlite*|),ntfs,Covers all common file extensions for SQLite databases
-336,Video files,Multimedia,**10\regex:*.+\.(3g2|3gp|amv|asf|avi|drc|flv|f4v|f4p|f4a|f4b|gif|gifv|m4v|mkv|mov|qt|mp4|m4p|mpg|mpeg|m2v|mp2|mpe|mpv|mts|m2ts|ts|mxf|nsv|ogv|ogg|rm|rmvb|roq|svi|viv|vob|webm|wmv|yuv),ntfs,Covers most (if not all) video file formats
+331,Audio files,Multimedia,"**10\*.{3gp,aa,aac,act,aiff,alac,amr,ape,au,awb,dss,dvf,flac,gsm,iklax,ivs,m4a,m4b,m4p,mmf,mp3,mpc,msv,nmf,ogg,oga,mogg,opus,ra,rm,raw,rf64,sln,tta,voc,vox,wav,wma,wv,webm}",ntfs,Covers most (if not all) audio file formats
+332,Excel and Excel-like Documents,Documents,"**10\*.{xls,xlsx,csv,tsv,xlt,xlm,xlsm,xltx,xltm,xlsb,xla,xlam,xll,xlw,ods,fodp,qpw}",ntfs,"Covers all document file formats for Excel, OpenOffice, LibreOffice, Apache OpenOffice, WPS Office, SoftMaker Office, and more"
+333,PDF and PDF-like Documents,Documents,"**10\*.{pdf,xps,oxps}",ntfs,Covers all PDF and PDF-like document formats
+334,Picture files,Multimedia,"**10\*.{ai,bmp,bpg,cdr,cpc,eps,exr,flif,gif,heif,ilbm,ima,jp2,j2k,jpf,jpm,jpg2,j2c,jpc,jpx,mj2jpeg,jpg,jxl,kra,ora,pcx,pgf,pgm,png,pnm,ppm,psb,psd,psp,svg,tga,tiff,webp,xaml,xcf}",ntfs,Covers most (if not all) picture file formats
+335,SQLite Files (.db* and .sqlite*),Databases,"**10\*.{db,db-wal,db-shm,sqlite,sqlite3}",ntfs,Covers all common file extensions for SQLite databases
+336,Video files,Multimedia,"**10\*.{3g2,3gp,amv,asf,avi,drc,flv,f4v,f4p,f4a,f4b,gif,gifv,m4v,mkv,mov,qt,mp4,m4p,mpg,mpeg,m2v,mp2,mpe,mpv,mts,m2ts,ts,mxf,nsv,ogv,ogg,rm,rmvb,roq,svi,viv,vob,webm,wmv,yuv}",ntfs,Covers most (if not all) video file formats
 337,Zips,Archives,**10\*.zip,lazy_ntfs,This is an example of how to walk a drive for a file mask. Probably do not want to use this one as is
-338,Word and Word-like Documents,Documents,**10\regex:*.+\.(doc|docx|docm|dotx|dotm|docb|dot|wbk|odt|fodt|rtf|wp*|tmd),ntfs,"Covers all document file formats for Word, OpenOffice, LibreOffice, Apache OpenOffice, WPS Office, SoftMaker Office, and more"
+338,Word and Word-like Documents,Documents,"**10\*.{doc,docx,docm,dotx,dotm,docb,dot,wbk,odt,fodt,rtf,tmd}",ntfs,"Covers all document file formats for Word, OpenOffice, LibreOffice, Apache OpenOffice, WPS Office, SoftMaker Office, and more"
 339,User Files - Desktop,LiveUserFiles,Users\*\Desktop\**10,lazy_ntfs,
 340,User Files - Documents,LiveUserFiles,Users\*\Documents\**10,lazy_ntfs,
 341,User Files - Downloads,LiveUserFiles,Users\*\Downloads\**10,lazy_ntfs,
@@ -748,10 +748,10 @@ Id,Name,Category,Glob,Accessor,Comment
 747,Everything (VoidTools) - Run History,FileSystem,Users\*\AppData\Roaming\Everything\Run History.csv,lazy_ntfs,Copies out a CSV containing the history of items ran from Everything's search results window
 748,Everything (VoidTools) - Search History,FileSystem,Users\*\AppData\Roaming\Everything\Search History.csv,lazy_ntfs,Copies out a CSV containing the history of items searched for within Everything with timestamps
 749,Exchange client access log files,Logs,Program Files\Microsoft\Exchange Server\*\Logging\**10\*.log,lazy_ntfs,Highly dependent on Exchange configuration
-750,Exchange Server Modified Compiled Files,Apps,Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files\**10\Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
-751,Exchange Server Modified Compiled Files,Apps,inetpub\wwwroot\aspnet_client\**10\Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
-752,Exchange Server Modified Compiled Files,Apps,inetpub\wwwroot\aspnet_client\system_web\**10\Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
-753,Exchange Server Modified Compiled Files,Apps,Program Files\Microsoft\Exchange Server\V15\FrontEnd\HttpProxy\owa\auth\**10\Regex:*.\b[a-zA-Z0-9_-]{8}\b.compiled,ntfs,Highly dependent on Exchange configuration
+750,Exchange Server Modified Compiled Files,Apps,Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files\**10,ntfs,Highly dependent on Exchange configuration
+751,Exchange Server Modified Compiled Files,Apps,inetpub\wwwroot\aspnet_client\**10,ntfs,Highly dependent on Exchange configuration
+752,Exchange Server Modified Compiled Files,Apps,inetpub\wwwroot\aspnet_client\system_web\**10,ntfs,Highly dependent on Exchange configuration
+753,Exchange Server Modified Compiled Files,Apps,Program Files\Microsoft\Exchange Server\V15\FrontEnd\HttpProxy\owa\auth\**10,ntfs,Highly dependent on Exchange configuration
 754,Exchange TransportRoles log files,Logs,Program Files\Microsoft\Exchange Server\*\TransportRoles\Logs\**10\*.log,lazy_ntfs,Highly dependent on Exchange configuration
 755,Fences - Desktop Screenshots,Apps,Users\*\AppData\Roaming\Stardock\Fences\Backups,lazy_ntfs,Locates all screenshots taken automatically by the Fences application
 756,FileZilla XML Log Files,Logs,Users\*\AppData\Roaming\FileZilla\*.xml*,lazy_ntfs,
@@ -973,3 +973,5 @@ Id,Name,Category,Glob,Accessor,Comment
 972,pCloud Database,Apps,Users\*\AppData\Local\pCloud\*.db,lazy_ntfs,Database contains all files sync'd with pCloud account.
 973,pCloud Database WAL File,Apps,Users\*\AppData\Local\pCloud\*.db-wal,lazy_ntfs,Write-Ahead Log for pCloud database file.
 974,pCloud Database Shared Memory File,Apps,Users\*\AppData\Local\pCloud\*.db-shm,lazy_ntfs,Shared Memory for the pCloud database file.
+975,Windows Defender Quarantine,Antivirus,ProgramData\Microsoft\Windows Defender\Quarantine\**10,lazy_ntfs,
+976,$Secure:$SDS,FileSystem,$Secure:$SDS,ntfs,

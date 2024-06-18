@@ -1,16 +1,15 @@
 """generate command
 """
-import typing as t
 from pathlib import Path
 from ..api import (
     DEFAULT_OS_TARGETS_MAPPING,
-    RuleSet,
     Collector,
     Distribution,
     Architecture,
     CustomProfile,
     CollectorConfig,
     OperatingSystem,
+    ruleset_from_targets,
 )
 from ..helper.crypto import provide_x509_certificate
 from ..helper.logging import LOGGER
@@ -28,14 +27,6 @@ def _select_targets(args, operating_system: OperatingSystem):
     return default
 
 
-def _rule_set_from_targets(
-    args, targets: t.List[str], operating_system: OperatingSystem
-) -> t.Optional[RuleSet]:
-    rule_set = args.cache.load_rule_set(operating_system)
-    target_set = args.cache.load_target_set(operating_system)
-    return target_set.select(rule_set, targets)
-
-
 def _generate_linux_cmd(args):
     LOGGER.info("starting linux collector generator...")
     if not check_device(args.device):
@@ -46,9 +37,12 @@ def _generate_linux_cmd(args):
     )
     targets = _select_targets(args, distribution.operating_system)
     try:
-        rule_set = _rule_set_from_targets(
-            args, targets, distribution.operating_system
+        rule_set = ruleset_from_targets(
+            args.cache, args.config, targets, distribution.operating_system
         )
+        if not rule_set:
+            LOGGER.warning("empty rule set, operation canceled.")
+            return
         certificate = provide_x509_certificate(
             args.output_directory,
             args.x509_certificate,
@@ -65,7 +59,7 @@ def _generate_linux_cmd(args):
         distribution=distribution,
     )
     collector = Collector(config=config)
-    collector.generate(args.cache, args.output_directory)
+    collector.generate(args.cache, args.config, args.output_directory)
 
 
 def _generate_windows_cmd(args):
@@ -81,9 +75,12 @@ def _generate_windows_cmd(args):
     )
     targets = _select_targets(args, distribution.operating_system)
     try:
-        rule_set = _rule_set_from_targets(
-            args, targets, distribution.operating_system
+        rule_set = ruleset_from_targets(
+            args.cache, args.config, targets, distribution.operating_system
         )
+        if not rule_set:
+            LOGGER.warning("empty rule set, operation canceled.")
+            return
         certificate = provide_x509_certificate(
             args.output_directory,
             args.x509_certificate,
@@ -103,10 +100,10 @@ def _generate_windows_cmd(args):
         use_auto_accessor=(not args.no_auto_accessor),
     )
     collector = Collector(config=config)
-    collector.generate(args.cache, args.output_directory)
+    collector.generate(args.cache, args.config, args.output_directory)
 
 
-def setup_generate(cmd):
+def setup_cmd(cmd):
     """Setup generate command"""
     generate = cmd.add_parser('generate', help="generate a collector")
     generate.add_argument(
@@ -126,7 +123,7 @@ def setup_generate(cmd):
         '-o',
         type=Path,
         default=Path('output').resolve(),
-        help="set output folder",
+        help="set output directory",
     )
     generate.add_argument(
         '--x509-certificate',

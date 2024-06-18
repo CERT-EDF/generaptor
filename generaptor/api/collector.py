@@ -9,6 +9,7 @@ from datetime import datetime
 from subprocess import run
 from dataclasses import dataclass
 from .cache import Cache
+from .config import Config
 from .ruleset import RuleSet
 from .distribution import Distribution, OperatingSystem
 from ..helper.crypto import Certificate, fingerprint, pem_string
@@ -54,13 +55,19 @@ class CollectorConfig:
             ctx['use_auto_accessor'] = 'Y' if self.use_auto_accessor else 'N'
         return ctx
 
-    def generate(self, cache: Cache, filepath: Path):
+    def generate(self, cache: Cache, config: Config, filepath: Path):
         """Generate configuration file data"""
-        with filepath.open('wb') as fstream:
-            template = cache.template_config(
+        vql_template = config.vql_template(
+            self.distribution.operating_system
+        )
+        if vql_template is None:
+            vql_template = cache.vql_template(
                 self.distribution.operating_system
             )
-            stream = template.stream(self.context)
+        else:
+            LOGGER.warning("using custom VQL template...")
+        with filepath.open('wb') as fstream:
+            stream = vql_template.stream(self.context)
             stream.dump(fstream, encoding='utf-8')
 
 
@@ -71,7 +78,7 @@ class Collector:
     config: CollectorConfig
 
     def generate(
-        self, cache: Cache, directory: Path
+        self, cache: Cache, config: Config, directory: Path
     ) -> t.Optional[t.Tuple[Path, Path]]:
         """Generate a configuration file and a pre-configured binary"""
         platform_binary = cache.platform_binary()
@@ -90,7 +97,7 @@ class Collector:
         )
         # generate collector config file
         LOGGER.info("generating configuration...")
-        self.config.generate(cache, output_config)
+        self.config.generate(cache, config, output_config)
         LOGGER.info("configuration written to: %s", output_config)
         # generate collector binary
         LOGGER.info("generating release binary...")

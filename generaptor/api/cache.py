@@ -3,6 +3,7 @@
 import typing as t
 from shutil import copy
 from pathlib import Path
+from gettext import ngettext
 from platform import system, architecture
 from dataclasses import dataclass
 from jinja2 import FileSystemLoader, Environment, Template
@@ -27,9 +28,7 @@ _PLATFORM_DISTRIBUTION_MAP = {
 
 def _copy_pkg_data_to_cache(pattern, cache_dir):
     for src_path in _PKG_DATA_DIR.glob(pattern):
-        dst_path = cache_dir / src_path.name
-        if not dst_path.is_file():
-            copy(src_path, dst_path)
+        copy(src_path, cache_dir / src_path.name)
 
 
 @dataclass
@@ -51,44 +50,52 @@ class Cache:
             return None
         return filepath
 
-    def flush(self, update_config=False, do_not_fetch=False):
-        """Flush cached config and/or programs"""
+    def update(self, do_not_fetch: bool = False) -> bool:
+        """Ensure that the cache directory is valid and mandatory files are present"""
         if self.program.is_dir() and not do_not_fetch:
             for filepath in self.program.iterdir():
                 filepath.unlink()
-        if self.directory.is_dir() and update_config:
-            for filepath in self.directory.iterdir():
-                if not filepath.is_file():
-                    continue
-                filepath.unlink()
-
-    def ensure(self) -> bool:
-        """Ensure that the cache directory is valid and mandatory files are present"""
-        # attempt to create directory anyway
         self.program.mkdir(parents=True, exist_ok=True)
-        # copy configuration templates
         _copy_pkg_data_to_cache('*.collector.yml', self.directory)
-        # copy targets datasets
         _copy_pkg_data_to_cache('*.targets.csv', self.directory)
-        # copy rules datasets
         _copy_pkg_data_to_cache('*.rules.csv', self.directory)
         return True
 
-    def load_rule_set(self, operating_system: OperatingSystem) -> RuleSet:
+    def load_rule_set(
+        self, operating_system: OperatingSystem
+    ) -> t.Optional[RuleSet]:
         """Load rules from cache matching given distribution"""
         filepath = self.directory / f'{operating_system.value}.rules.csv'
+        if not filepath.is_file():
+            LOGGER.warning("file not found: %s", filepath)
+            return None
         rule_set = RuleSet.from_filepath(filepath)
-        LOGGER.info("loaded %d rules", rule_set.count)
+        LOGGER.info(
+            "loaded %d %s from %s",
+            rule_set.count,
+            ngettext('rule', 'rules', rule_set.count),
+            filepath,
+        )
         return rule_set
 
-    def load_target_set(self, operating_system: OperatingSystem) -> TargetSet:
+    def load_target_set(
+        self, operating_system: OperatingSystem
+    ) -> t.Optional[TargetSet]:
         """Load targets from cache matching given distribution"""
         filepath = self.directory / f'{operating_system.value}.targets.csv'
+        if not filepath.is_file():
+            LOGGER.warning("file not found: %s", filepath)
+            return None
         target_set = TargetSet.from_filepath(filepath)
-        LOGGER.info("loaded %d targets", target_set.count)
+        LOGGER.info(
+            "loaded %d %s from %s",
+            target_set.count,
+            ngettext('target', 'targets', target_set.count),
+            filepath,
+        )
         return target_set
 
-    def template_config(self, operating_system: OperatingSystem) -> Template:
+    def vql_template(self, operating_system: OperatingSystem) -> Template:
         """Load jinja template matching given distribution"""
         loader = FileSystemLoader(self.directory)
         environment = Environment(

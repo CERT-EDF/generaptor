@@ -26,7 +26,7 @@ def _get_fingerprint_cmd(args):
         LOGGER.warning("skipped %s", filepath)
 
 
-def setup_get_fingerprint(cmd):
+def setup_cmd(cmd):
     """Setup get-fingerprint command"""
     get_fingerprint = cmd.add_parser(
         'get-fingerprint',

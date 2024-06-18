@@ -57,3 +57,11 @@ class TargetSet:
                 "select %s (%d rules)", target.name, len(target.rule_uids)
             )
         return RuleSet(rules=rules)
+
+    def merge(self, target_set: 'TargetSet', base_uid: int):
+        """Merge given target set using given base uid in this target set"""
+        for name, target in target_set.targets.items():
+            self.targets[name] = Target(
+                name=name,
+                rule_uids={base_uid + uid for uid in target.rule_uids},
+            )

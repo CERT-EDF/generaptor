@@ -22,8 +22,8 @@ class OperatingSystem(Enum):
 
 
 DEFAULT_OS_TARGETS_MAPPING = {
-    OperatingSystem.WINDOWS: ['KapeTriage'],
-    OperatingSystem.LINUX: ['LinuxTriage'],
+    OperatingSystem.WINDOWS: ['Triage/Kape'],
+    OperatingSystem.LINUX: ['Triage/Full'],
 }
 
 

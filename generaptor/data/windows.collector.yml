@@ -142,10 +142,12 @@ autoexec:
                     device=RootDevice,
                     scheme="x509",
                     fingerprint_hex="{{ cert_fingerprint_hex }}",
-                    b64_enc_secret=pk_encrypt(
-                      scheme="x509",
-                      data=secret.value,
-                      public_key="{{ cert_data_pem_str }}"
+                    b64_enc_secret=base64encode(
+                      string=pk_encrypt(
+                        scheme="x509",
+                        data=secret.value,
+                        public_key="{{ cert_data_pem_str }}"
+                      )
                     )
                   ),
                   password=secret.value,

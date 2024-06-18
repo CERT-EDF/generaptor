@@ -2,17 +2,14 @@
 """
 from ..api import SUPPORTED_DISTRIBUTIONS
 from ..helper.http import http_set_proxies, http_download
-from ..helper.prompt import confirm
 from ..helper.github import github_release
 from ..helper.logging import LOGGER
 
 
-def _refresh_cmd(args):
-    if not (args.yes or confirm("Refreshing cache will flush current cache.")):
-        return
-    LOGGER.info("refreshing cache...")
-    args.cache.flush(args.refresh_config, args.do_not_fetch)
-    args.cache.ensure()
+def _update_cmd(args):
+    LOGGER.info("updating...")
+    args.cache.update(args.do_not_fetch)
+    LOGGER.info("cache updated.")
     if args.do_not_fetch:
         return
     LOGGER.info("downloading %s release...", args.fetch_tag)
@@ -20,7 +17,9 @@ def _refresh_cmd(args):
         http_set_proxies({'https': args.proxy_url})
     gh_release = github_release('velocidex', 'velociraptor', args.fetch_tag)
     if not gh_release:
-        LOGGER.error("failed to find a valid realease for tag: %s", args.fetch_tag)
+        LOGGER.error(
+            "failed to find a valid realease for tag: %s", args.fetch_tag
+        )
         return
     LOGGER.info("velociraptor release matched: %s", gh_release.tag)
     downloaded = set()
@@ -40,29 +39,22 @@ def _refresh_cmd(args):
             http_download(asset.url, args.cache.path(asset.url.split('/')[-1]))
 
 
-def setup_refresh(cmd):
-    """Setup refresh command"""
-    refresh = cmd.add_parser('refresh', help="refresh environment cache")
-    refresh.add_argument(
-        '--yes', '-y', action='store_true', help="non-interactive confirmation"
-    )
-    refresh.add_argument(
-        '--refresh-config',
-        action='store_true',
-        help="refresh configuration files as well",
-    )
-    refresh.add_argument(
+def setup_cmd(cmd):
+    """Setup update command"""
+    update = cmd.add_parser('update', help="update config and fetch binaries")
+    update.add_argument(
         '--do-not-fetch',
         action='store_true',
-        help="do not fetch latest velociraptor release",
+        help="do not fetch velociraptor binaries",
     )
-    refresh.add_argument(
+    update.add_argument(
         '--fetch-tag',
-        default='v0.7.0',
+        default='v0.72',
         help=(
-            "fetch this tag, use 'latest' to fetch the latest version, warning:"
-            " fecthing another version than the default might break the collector"
+            "fetch this tag, use 'latest' to fetch the latest version. "
+            "Caution: fecthing another version than the default might "
+            "break the collector"
         ),
     )
-    refresh.add_argument('--proxy-url', help="set proxy url")
-    refresh.set_defaults(func=_refresh_cmd)
+    update.add_argument('--proxy-url', help="set proxy url")
+    update.set_defaults(func=_update_cmd)

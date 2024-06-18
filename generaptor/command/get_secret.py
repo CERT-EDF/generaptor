@@ -14,7 +14,7 @@ def _print_collection_secret(private_key: RSAPrivateKey, filepath: Path):
     try:
         secret = collection.secret(private_key)
     except ValueError:
-        LOGGER.error("Private key does not match collection archive")
+        LOGGER.error("private key does not match collection archive")
         return
     print(f"{secret}:{filepath}")
 
@@ -23,7 +23,7 @@ def _get_secret_cmd(args):
     try:
         private_key = load_private_key(args.private_key)
     except ValueError:
-        LOGGER.error("Invalid private key and/or passphrase")
+        LOGGER.error("invalid private key and/or passphrase")
         return
     if not private_key:
         return
@@ -38,7 +38,7 @@ def _get_secret_cmd(args):
         LOGGER.warning("skipped %s", filepath)
 
 
-def setup_get_secret(cmd):
+def setup_cmd(cmd):
     """Setup get-secret command"""
     get_secret = cmd.add_parser(
         'get-secret', help="get the collection archive secret"

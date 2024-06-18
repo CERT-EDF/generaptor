@@ -4,7 +4,6 @@ import typing as t
 from json import loads
 from pathlib import Path
 from zipfile import ZipFile
-from subprocess import check_call
 from dataclasses import dataclass
 from pyzipper import AESZipFile
 from ..helper.crypto import RSAPrivateKey, decrypt_secret, checksum
@@ -86,3 +85,6 @@ class Collection:
         finally:
             data_filepath.unlink()
         return success
+
+
+CollectionList = t.List[Collection]
