@@ -35,9 +35,9 @@ def app():
     LOGGER.info("Generaptor v%s", version)
     args = _parse_args()
     args.config.directory.mkdir(parents=True, exist_ok=True)
-    if not args.cache.directory.is_dir() and args.cmd != 'refresh':
+    if not args.cache.directory.is_dir() and args.cmd != 'update':
         LOGGER.error(
-            "cache refresh is needed, please run 'refresh' command first"
+            "cache update is needed, please run 'update' command first"
         )
         return
     args.func(args)
