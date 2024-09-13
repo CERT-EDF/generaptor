@@ -1,12 +1,13 @@
 """Cryptography helper
 """
-import typing as t
+
 from os import getenv
+from typing import Optional
 from base64 import b64decode
 from pathlib import Path
 from getpass import getpass
 from secrets import token_urlsafe
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from cryptography.x509 import (
     load_pem_x509_certificate,
     random_serial_number,
@@ -82,7 +83,7 @@ def _provide_private_key_secret(
 def _generate_self_signed_certificate(
     output_directory: Path,
     ask_password: bool = False,
-    private_key_secret: t.Optional[str] = None,
+    private_key_secret: Optional[str] = None,
 ) -> Certificate:
     LOGGER.info("generating private key... please wait...")
     private_key = generate_private_key(
@@ -94,7 +95,7 @@ def _generate_self_signed_certificate(
             NameAttribute(NameOID.COMMON_NAME, "generaptor"),
         ]
     )
-    utc_now = datetime.utcnow()
+    utc_now = datetime.now(timezone.utc)
     LOGGER.info("generating certificate...")
     certificate = (
         CertificateBuilder()
@@ -155,9 +156,9 @@ def load_certificate(cert_filepath: Path):
 
 def provide_x509_certificate(
     output_directory: Path,
-    cert_filepath: t.Optional[Path] = None,
+    cert_filepath: Optional[Path] = None,
     ask_password: bool = False,
-    private_key_secret: t.Optional[str] = None,
+    private_key_secret: Optional[str] = None,
 ) -> str:
     """Provide x509 certificate"""
     if cert_filepath and cert_filepath.is_file():
@@ -175,8 +176,8 @@ def provide_x509_certificate(
 
 
 def load_private_key(
-    private_key_path: Path, private_key_secret: t.Optional[str] = None
-) -> t.Optional[RSAPrivateKey]:
+    private_key_path: Path, private_key_secret: Optional[str] = None
+) -> Optional[RSAPrivateKey]:
     """Load PEM encoded encrypted private key from file"""
     try:
         private_key_secret = private_key_secret or _provide_private_key_secret(

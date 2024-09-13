@@ -1,7 +1,8 @@
 """Collection API
 """
-import typing as t
+
 from json import loads
+from typing import Optional
 from pathlib import Path
 from zipfile import ZipFile
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ class Collection:
     filepath: Path
 
     @property
-    def metadata(self) -> t.Mapping[str, str]:
+    def metadata(self) -> dict[str, str]:
         """Collection metadata"""
         if not hasattr(self, '__metadata'):
             with ZipFile(self.filepath) as zipf:
@@ -39,21 +40,21 @@ class Collection:
         return getattr(self, '__checksum')
 
     @property
-    def hostname(self) -> t.Optional[str]:
+    def hostname(self) -> Optional[str]:
         """Retrieve hostname in metadata"""
         return self.metadata.get('hostname')
 
     @property
-    def device(self) -> t.Optional[str]:
+    def device(self) -> Optional[str]:
         """Retrieve hostname in metadata"""
         return self.metadata.get('device')
 
     @property
-    def fingerprint(self) -> t.Optional[str]:
+    def fingerprint(self) -> Optional[str]:
         """Retrieve public key fingerprint in metadata"""
         return self.metadata.get('fingerprint_hex')
 
-    def secret(self, private_key: RSAPrivateKey) -> t.Optional[str]:
+    def secret(self, private_key: RSAPrivateKey) -> Optional[str]:
         """Retrieve collection secret"""
         b64_enc_secret = self.metadata.get('b64_enc_secret')
         if not b64_enc_secret:
@@ -87,4 +88,4 @@ class Collection:
         return success
 
 
-CollectionList = t.List[Collection]
+CollectionList = list[Collection]

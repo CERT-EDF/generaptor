@@ -1,6 +1,7 @@
 """Github helpers
 """
-import typing as t
+
+from typing import Optional
 from operator import attrgetter
 from dataclasses import dataclass
 from .http import http_get_json
@@ -22,7 +23,7 @@ class GithubRelease:
 
     name: str
     tag: str
-    assets: t.List[GithubAsset]
+    assets: list[GithubAsset]
 
     @classmethod
     def from_dict(cls, dct):
@@ -48,7 +49,7 @@ class GithubRelease:
 
 def github_release(
     owner: str, repository: str, tag: str = 'latest'
-) -> GithubRelease:
+) -> Optional[GithubRelease]:
     """Get a summary of the latest release published in a Github repository"""
     page = 1
     while page:

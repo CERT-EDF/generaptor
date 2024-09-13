@@ -1,6 +1,7 @@
 """Generaptor API
 """
-import typing as t
+
+from typing import Optional
 from .cache import Cache
 from .collection import Collection, CollectionList
 from .collector import CollectorConfig, Collector
@@ -21,9 +22,9 @@ from ..helper.logging import LOGGER
 def ruleset_from_targets(
     cache: Cache,
     config: Config,
-    targets: t.List[str],
+    targets: list[str],
     operating_system: OperatingSystem,
-) -> t.Optional[RuleSet]:
+) -> Optional[RuleSet]:
     """Load ruleset for given targets and operating system"""
     # load standard ruleset and targetset from cache
     rule_set = cache.load_rule_set(operating_system)

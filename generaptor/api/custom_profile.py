@@ -1,6 +1,6 @@
 """CustomProfile API
 """
-import typing as t
+
 from json import loads
 from pathlib import Path
 from dataclasses import dataclass
@@ -10,7 +10,7 @@ from dataclasses import dataclass
 class CustomProfile:
     """Custom profile file"""
 
-    targets: t.List[str]
+    targets: list[str]
 
     @classmethod
     def from_filepath(cls, filepath: Path):

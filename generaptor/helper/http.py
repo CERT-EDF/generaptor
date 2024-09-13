@@ -1,5 +1,6 @@
 """HTTP helpers
 """
+
 from json import load, JSONDecodeError
 from shutil import copyfileobj
 from pathlib import Path

@@ -1,6 +1,6 @@
 """Rule Set API
 """
-import typing as t
+
 from pathlib import Path
 from dataclasses import dataclass
 from ..helper.csv import stream_csv
@@ -23,12 +23,17 @@ class Rule:
 class RuleSet:
     """Set of rules"""
 
-    rules: t.Mapping[int, Rule]
+    rules: dict[int, Rule]
 
     @property
     def count(self) -> int:
         """Count of rules in ruleset"""
         return len(self.rules)
+
+    @property
+    def empty(self) -> bool:
+        """Determine if ruleset is empty"""
+        return not bool(self.rules)
 
     @property
     def max_uid(self) -> int:

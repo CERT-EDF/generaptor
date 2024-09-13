@@ -3,21 +3,16 @@
 
 ## Introduction
 
-Generaptor is a platform-agnostic command line tool to generate a
-[Velociraptor](https://github.com/velocidex/velociraptor) offline collector
-based on pre-configured or customizable collection profiles.
+Generaptor is a platform-agnostic command line tool to generate a [Velociraptor](https://github.com/velocidex/velociraptor) offline collector based on pre-configured or customizable collection profiles.
 
-All platforms can generate collectors for all targets, there is no limitation
-thanks to Python on the generation side and velociraptor on the configuration
-repacking side.
+All platforms can generate collectors for all targets, there is no limitation thanks to Python on the generation side and velociraptor on the configuration repacking side.
 
-Generation of Darwin collector is not implemented for the moment due to the lack
-of use case on our side. Feel free to open a pull request regarding this feature.
+Generation of Darwin collector is not implemented for the moment due to the lack of use case on our side. Feel free to open a pull request regarding this feature.
 
 
 ## Dependencies
 
-Dependencies are listed in [setup.cfg](setup.cfg) under `install_requires` option.
+Dependencies are listed in [pyproject.toml](pyproject.toml) under `dependencies` option.
 
 
 ## Setup
@@ -35,7 +30,7 @@ python3 -m pip install git+https://github.com/cert-edf/generaptor
 
 ```bash
 # First, we fetch latest stable release of velociraptor
-generaptor refresh
+generaptor update
 # Then create a collector for windows for instance
 generaptor generate -o /data/case/case-001/collectors/ windows
 # keep the private key secret in a password vault to be able to decrypt the archive
@@ -60,25 +55,20 @@ generaptor generate windows --device D:
 # Collector targets customization (interactive)
 generaptor generate --custom windows
 # Collector targets customization using a profile (non interactive)
-echo '{"targets":["IISLogFiles"]}' > iis_server.json
+echo '{"targets":["WebServer/IIS"]}' > iis_server.json
 generaptor generate --custom-profile iis_server.json windows
 ```
 
 
 ## Expert Collector Generation
 
-Generaptor can use optional configuration files put in `$HOME/.config/generaptor`
-directory to generate collectors.
+Generaptor can use optional configuration files put in `$HOME/.config/generaptor` directory to generate collectors.
 
 Target and rules can be extended using this configuration directory.
 
-VQL templates can also be modified to add custom artifacts or modify the
-collector behavior. Please refer to
-[Velociraptor documentation](https://docs.velociraptor.app/) to learn how to
-master VQL and write your own configuration files.
+VQL templates can also be modified to add custom artifacts or modify the collector behavior. Please refer to [Velociraptor documentation](https://docs.velociraptor.app/) to learn how to master VQL and write your own configuration files.
 
-After starting generaptor for the first time, you can use the following commands
-to initialize the configuration directory
+After starting generaptor for the first time, you can use the following commands to initialize the configuration directory
 
 ```bash
 # Add variables for directories in current environment
@@ -90,8 +80,8 @@ head -n 1 "${CACHE}/linux.targets.csv" > "${CONFIG}/linux.targets.csv"
 head -n 1 "${CACHE}/windows.rules.csv" > "${CONFIG}/windows.rules.csv"
 head -n 1 "${CACHE}/windows.targets.csv" > "${CONFIG}/windows.targets.csv"
 # Copy VQL templates
-cp "${CACHE}/linux.collector.yml" "${CONFIG}/"
-cp "${CACHE}/windows.collector.yml" "${CONFIG}/"
+cp "${CACHE}/linux.collector.yml.jinja" "${CONFIG}/"
+cp "${CACHE}/windows.collector.yml.jinja" "${CONFIG}/"
 ```
 
 

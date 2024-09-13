@@ -1,5 +1,6 @@
 """generate command
 """
+
 from pathlib import Path
 from ..api import (
     DEFAULT_OS_TARGETS_MAPPING,
@@ -40,7 +41,7 @@ def _generate_linux_cmd(args):
         rule_set = ruleset_from_targets(
             args.cache, args.config, targets, distribution.operating_system
         )
-        if not rule_set:
+        if rule_set.empty:
             LOGGER.warning("empty rule set, operation canceled.")
             return
         certificate = provide_x509_certificate(
@@ -78,7 +79,7 @@ def _generate_windows_cmd(args):
         rule_set = ruleset_from_targets(
             args.cache, args.config, targets, distribution.operating_system
         )
-        if not rule_set:
+        if rule_set.empty:
             LOGGER.warning("empty rule set, operation canceled.")
             return
         certificate = provide_x509_certificate(

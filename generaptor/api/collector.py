@@ -1,8 +1,9 @@
 """Collector API
 """
-import typing as t
+
 from io import StringIO
 from csv import writer, QUOTE_MINIMAL
+from typing import Optional
 from pathlib import Path
 from platform import system
 from datetime import datetime
@@ -36,9 +37,9 @@ class CollectorConfig:
     rule_set: RuleSet
     certificate: Certificate
     distribution: Distribution
-    dont_be_lazy: t.Optional[bool] = None
-    vss_analysis_age: t.Optional[int] = None
-    use_auto_accessor: t.Optional[bool] = None
+    dont_be_lazy: Optional[bool] = None
+    vss_analysis_age: Optional[int] = None
+    use_auto_accessor: Optional[bool] = None
 
     @property
     def context(self):
@@ -57,9 +58,7 @@ class CollectorConfig:
 
     def generate(self, cache: Cache, config: Config, filepath: Path):
         """Generate configuration file data"""
-        vql_template = config.vql_template(
-            self.distribution.operating_system
-        )
+        vql_template = config.vql_template(self.distribution.operating_system)
         if vql_template is None:
             vql_template = cache.vql_template(
                 self.distribution.operating_system
@@ -79,7 +78,7 @@ class Collector:
 
     def generate(
         self, cache: Cache, config: Config, directory: Path
-    ) -> t.Optional[t.Tuple[Path, Path]]:
+    ) -> Optional[tuple[Path, Path]]:
         """Generate a configuration file and a pre-configured binary"""
         platform_binary = cache.platform_binary()
         if not platform_binary:

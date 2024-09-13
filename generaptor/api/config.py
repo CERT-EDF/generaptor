@@ -1,6 +1,7 @@
 """Cache APIs
 """
-import typing as t
+
+from typing import Optional
 from pathlib import Path
 from gettext import ngettext
 from dataclasses import dataclass
@@ -19,7 +20,7 @@ class Config:
 
     def load_rule_set(
         self, operating_system: OperatingSystem
-    ) -> t.Optional[RuleSet]:
+    ) -> Optional[RuleSet]:
         """Load rules from cache matching given distribution"""
         filepath = self.directory / f'{operating_system.value}.rules.csv'
         if not filepath.is_file():
@@ -35,7 +36,7 @@ class Config:
 
     def load_target_set(
         self, operating_system: OperatingSystem
-    ) -> t.Optional[TargetSet]:
+    ) -> Optional[TargetSet]:
         """Load targets from cache matching given distribution"""
         filepath = self.directory / f'{operating_system.value}.targets.csv'
         if not filepath.is_file():
@@ -51,9 +52,9 @@ class Config:
 
     def vql_template(
         self, operating_system: OperatingSystem
-    ) -> t.Optional[Template]:
+    ) -> Optional[Template]:
         """Load jinja template matching given distribution"""
-        filename = f'{operating_system.value}.collector.yml'
+        filename = f'{operating_system.value}.collector.yml.jinja'
         template = self.directory / filename
         if not template.is_file():
             return None

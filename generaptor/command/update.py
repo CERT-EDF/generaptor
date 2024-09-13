@@ -1,5 +1,6 @@
 """refresh command
 """
+
 from ..api import SUPPORTED_DISTRIBUTIONS
 from ..helper.http import http_set_proxies, http_download
 from ..helper.github import github_release

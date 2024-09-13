@@ -1,5 +1,6 @@
 """Command module
 """
+
 from .update import setup_cmd as setup_update
 from .generate import setup_cmd as setup_generate
 from .extract import setup_cmd as setup_extract

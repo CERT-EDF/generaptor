@@ -1,6 +1,6 @@
 """Target Set API
 """
-import typing as t
+
 from json import loads
 from pathlib import Path
 from dataclasses import dataclass
@@ -15,14 +15,14 @@ class Target:
     """Target"""
 
     name: str
-    rule_uids: t.Set[int]
+    rule_uids: set[int]
 
 
 @dataclass
 class TargetSet:
     """Set of targets"""
 
-    targets: t.Mapping[str, Target]
+    targets: dict[str, Target]
 
     @property
     def count(self):
@@ -38,15 +38,18 @@ class TargetSet:
             targets[name] = Target(name=name, rule_uids=set(loads(rule_uids)))
         return cls(targets=targets)
 
-    def select(self, rule_set: RuleSet, targets: t.List[str]) -> RuleSet:
+    def select(self, rule_set: RuleSet, targets: list[str]) -> RuleSet:
         """Build a rule set from an existing ruleset and selected targets"""
         title = "Pick one or more collection targets"
         options = list(sorted(self.targets.keys()))
         if not targets:
             targets = multiselect(title, options)
         rules = {}
-        for target in targets:
-            target = self.targets[target]
+        for name in targets:
+            target = self.targets.get(name)
+            if not target:
+                LOGGER.warning("skipped unknown target ('%s')", name)
+                continue
             rules.update(
                 {
                     rule_uid: rule_set.rules[rule_uid]

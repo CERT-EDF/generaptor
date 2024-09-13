@@ -1,6 +1,6 @@
 """get-globs command
 """
-from pathlib import Path
+
 from rich.box import ROUNDED
 from rich.table import Table
 from rich.console import Console
@@ -20,7 +20,7 @@ def _get_globs_cmd(args):
         print()
         LOGGER.warning("operation canceled.")
         return
-    if not rule_set:
+    if rule_set.empty:
         LOGGER.warning("empty rule set, operation canceled.")
         return
     table = Table(
@@ -38,6 +38,7 @@ def _get_globs_cmd(args):
     console = Console()
     console.print(table)
 
+
 def setup_cmd(cmd):
     """Setup get-globs command"""
     get_globs = cmd.add_parser(
@@ -49,7 +50,6 @@ def setup_cmd(cmd):
         metavar='target',
         default=[],
         nargs='+',
-        type=Path,
         help="collection targets",
     )
     get_globs.add_argument(
