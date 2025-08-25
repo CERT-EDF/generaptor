@@ -1,30 +1,33 @@
 #!/usr/bin/env python3
-"""Generate windows.targets.csv and windows.rules.csv
-"""
-from io import StringIO
-from csv import DictReader, DictWriter
-from json import loads
-from pathlib import Path
-from operator import itemgetter
+"""Generate windows.targets.csv and windows.rules.csv"""
 from collections import defaultdict
+from collections.abc import Iterator
+from csv import DictReader, DictWriter
+from io import StringIO
+from json import loads
+from operator import itemgetter
+from pathlib import Path
 from urllib.request import urlopen
+
 from yaml import safe_load
+
+Record = dict[str, str]
+RecordIterator = Iterator[Record]
 
 
 TARGETS_MAPPING = {
+    '1Password': 'Vault/1Password',
+    '4KVideoDownloader': 'FileTransfer/4KVideoDownloader',
     '_BasicCollection': 'Triage/Basic',
-    '_KapeTriage': 'Triage/Kape',
-    '_SANS_Triage': 'Triage/SANS',
     '_Boot': 'SystemFile/Boot',
     '_J': 'SystemFile/J',
+    '_KapeTriage': 'Triage/Kape',
     '_LogFile': 'SystemFile/LogFile',
     '_MFT': 'SystemFile/MFT',
     '_MFTMirr': 'SystemFile/MFTMirr',
+    '_SANS_Triage': 'Triage/SANS',
     '_SDS': 'SystemFile/Secure',
     '_T': 'SystemFile/T',
-    '1Password': 'Vault/1Password',
-    '4KVideoDownloader': 'FileTransfer/4KVideoDownloader',
-    'AVG': 'Protection/AVG',
     'AceText': 'Editor/AceText',
     'AcronisTrueImage': 'Backup/Acronis',
     'Action1': 'Protection/Action1',
@@ -38,16 +41,17 @@ TARGETS_MAPPING = {
     'ApacheAccessLog': 'Web/Server/Apache',
     'AppCompatPCA': 'SystemFile/AppCompatPCA',
     'AppData': 'UserFile/AppData',
-    'AppXPackages': 'SystemFile/AppXPackages',
     'ApplicationEvents': 'SystemFile/Logs',
+    'AppXPackages': 'SystemFile/AppXPackages',
     'AsperaConnect': 'FileTransfer/AsperaConnect',
     'AteraAgent': 'RMM/AteraAgent',
     'Avast': 'Protection/Avast',
+    'AVG': 'Protection/AVG',
     'AviraAVLogs': 'Protection/Avira',
     'BCD': 'SystemFile/BCD',
+    'Bitdefender': 'Protection/Bitdefender',
     'BITS': 'FileTransfer/BITS',
     'BitTorrent': 'FileTransfer/BitTorrent',
-    'Bitdefender': 'Protection/Bitdefender',
     'BoxDrive_Metadata': 'FileTransfer/BoxDrive/Metadata',
     'BoxDrive_UserFiles': 'UserFile/BoxDrive',
     'BraveBrowser': 'Web/Browser/Brave',
@@ -67,7 +71,6 @@ TARGETS_MAPPING = {
     'Cybereason': 'Protection/Cybereason',
     'Cylance': 'Protection/Cylance',
     'DC__': 'FileTransfer/DC++',
-    'DWAgent': 'RMM/DWService',
     'Debian': 'WSL/Debian',
     'DirectoryOpus': 'FileManager/DirectoryOpus',
     'DirectoryTraversal_AudioFiles': 'UserFile/Audio',
@@ -83,15 +86,17 @@ TARGETS_MAPPING = {
     'Drivers': 'SystemFile/Drivers',
     'Dropbox_Metadata': 'FileTransfer/Dropbox/Metadata',
     'Dropbox_UserFiles': 'UserFile/Dropbox',
-    'EFCommander': 'FileManager/EFCommander',
-    'ESET': 'Protection/ESET',
+    'DWAgent': 'RMM/DWService',
     'Edge': 'Web/Browser/Edge',
     'EdgeChromium': 'Web/Browser/Edgium/Metadata',
     'EdgeChromiumExtensions': 'Web/Browser/Edgium/Extensions',
+    'EFCommander': 'FileManager/EFCommander',
     'Emsisoft': 'Protection/Emsisoft',
+    'eMule': 'FileTransfer/eMule',
     'EncapsulationLogging': 'SystemFile/EncapsulationLogging',
-    'EventLogs_RDP': 'SystemFile/Logs/RDP',
+    'ESET': 'Protection/ESET',
     'EventLogs': 'SystemFile/Logs',
+    'EventLogs_RDP': 'SystemFile/Logs/RDP',
     'EventTraceLogs': 'SystemFile/Logs/ETL',
     'EventTranscriptDB': 'SystemFile/EventTranscriptDB',
     'Evernote': 'Editor/Evernote',
@@ -102,8 +107,6 @@ TARGETS_MAPPING = {
     'ExchangeCve_2021_26855': 'WindowsServer/Exchange',
     'ExchangeSetupLog': 'WindowsServer/Exchange',
     'ExchangeTransport': 'WindowsServer/Exchange',
-    'FSecure': 'Protection/FSecure',
-    'FTPClients': 'FileTransfer/*',
     'Fences': 'Desktop/Fences',
     'FileExplorerReplacements': 'FileManager/*',
     'FileSystem': 'SystemFile/FileSystem',
@@ -115,39 +118,43 @@ TARGETS_MAPPING = {
     'FreeFileSync': 'FileTransfer/FreeFileSync',
     'Freenet': 'FileTransfer/Freenet',
     'FrostWire': 'FileTransfer/FrostWire',
+    'FSecure': 'Protection/FSecure',
+    'FTPClients': 'FileTransfer/*',
     'Gigatribe': 'FileTransfer/Gigatribe',
-    'GoogleDriveBackupSync_UserFiles': 'UserFile/GoogleDrive',
     'GoogleDrive_Metadata': 'FileTransfer/GoogleDrive/Metadata',
+    'GoogleDriveBackupSync_UserFiles': 'UserFile/GoogleDrive',
     'GoogleEarth': 'Reader/GoogleEarth',
     'GroupPolicy': 'SystemFile/GroupPolicy',
     'HeidiSQL': 'Database/HeidiSQL',
     'HexChat': 'Messaging/HexChat',
     'HitmanPro': 'Protection/HitmanPro',
-    'IISConfiguration': 'Web/Server/IIS',
-    'IISLogFiles': 'Web/Server/IIS',
-    'IRCClients': 'Messaging/IRC/*',
-    'ISLOnline': 'RMM/ISLOnline',
+    'HostsFile': 'SystemFile/Hosts',
     'IceChat': 'Messaging/IceChat',
     'IconCacheDB': 'SystemFile/IconCacheDB',
     'Idrive': 'Backup/Idrive',
+    'IISConfiguration': 'Web/Server/IIS',
+    'IISLogFiles': 'Web/Server/IIS',
     'ImgBurn': 'Burner/ImgBurn',
     'InternetExplorer': 'Web/Browser/IE',
+    'IRCClients': 'Messaging/IRC/*',
     'IrfanView': 'Reader/IrfanView',
-    'JDownloader2': 'FileTransfer/JDownloader2',
+    'ISLOnline': 'RMM/ISLOnline',
+    'ITarian': 'RMM/ITarian',
+    'iTunesBackup': 'Backup/iTunes',
     'JavaWebCache': 'FileTransfer/JavaWebCache',
+    'JDownloader2': 'FileTransfer/JDownloader2',
+    'JumpLists': 'SystemFile/LinksAndJumpLists',
     'Kali': 'WSL/Kali',
     'KapeTriage': 'Triage/Kape',
     'Kaseya': 'RMM/Kaseya',
     'Keepass': 'Vault/Keepass',
     'KeepassXC': 'Vault/KeepassXC',
-    'LNKFilesAndJumpLists': 'SystemFile/LinksAndJumpLists',
     'Level': None,
     'LinuxOnWindowsProfileFiles': 'WSL/*/ProfileFiles',
     'LiveUserFiles': 'UserFile/*',
+    'LNKFilesAndJumpLists': 'SystemFile/LinksAndJumpLists',
     'LogFiles': 'SystemFile/Logs',
     'LogMeIn': 'VPN/LogMeIn',
-    'MOF': 'SystemFile/MOF',
-    'MSSQLErrorLog': 'Database/MSSQL',
     'MacriumReflect': 'Backup/MacriumReflect',
     'Malwarebytes': 'Protection/Malwarebytes',
     'ManageEngineLogs': 'RMM/ManageEngine',
@@ -167,18 +174,22 @@ TARGETS_MAPPING = {
     'MicrosoftToDo': 'Editor/Microsoft/ToDo',
     'MidnightCommander': 'FileManager/MidnightCommander',
     'MiniTimelineCollection': 'Triage/MiniTimeline',
+    'mIRC': 'Messaging/mIRC',
+    'MOF': 'SystemFile/MOF',
+    'mRemoteNG': 'RMM/mRemoteNG',
+    'MSSQLErrorLog': 'Database/MSSQL',
     'MultiCommander': 'FileManager/MultiCommander',
-    'NETCLRUsageLogs': 'SystemFile/NETCLRUsage',
-    'NGINXLogs': 'Web/Server/Nginx',
-    'NZBGet': 'FileTransfer/NZBGet',
     'Nessus': 'Protection/Nessus',
+    'NETCLRUsageLogs': 'SystemFile/NETCLRUsage',
     'NetMonitorforEmployeesProfessional': 'RMM/ManageEngine',
     'NewsbinPro': 'Reader/NewsbinPro',
     'Newsleecher': 'Reader/Newsleecher',
+    'NGINXLogs': 'Web/Server/Nginx',
     'Nicotine__': 'FileTransfer/Nicotine+',
-    'Notepad__': 'Editor/Notepad++',
     'Notepad': 'Editor/Notepad',
+    'Notepad__': 'Editor/Notepad++',
     'Notion': 'Editor/Notion',
+    'NZBGet': 'FileTransfer/NZBGet',
     'OfficeAutosave': 'UserFile/Office/Autosave',
     'OfficeDiagnostics': 'SystemFile/Office/Diagnostics',
     'OfficeDocumentCache': 'UserFile/Office/Cache',
@@ -187,10 +198,12 @@ TARGETS_MAPPING = {
     'OneDrive_UserFiles': 'UserFile/OneDrive',
     'OpenSSHClient': 'RMM/OpenSSH/Client',
     'OpenSSHServer': 'RMM/OpenSSH/Server',
+    'openSUSE': 'WSL/openSUSE',
     'OpenVPNClient': 'VPN/OpenVPN',
     'Opera': 'Web/Browser/Opera',
     'OutlookPSTOST': 'Messaging/Outlook',
     'P2PClients': 'FileTransfer/*',
+    'pCloudDatabase': 'FileTransfer/pCloud',
     'PeaZip': 'Archiver/PeaZip',
     'PerfLogs': 'SystemFile/PerfLogs',
     'PowerShell7Config': 'UserFile/PowerShell',
@@ -198,18 +211,21 @@ TARGETS_MAPPING = {
     'PowerShellTranscripts': 'UserFile/PowerShell',
     'Prefetch': 'SystemFile/Prefetch',
     'ProgramData': 'SystemFile/ProgramData',
+    'ProgramExecution': None,
     'ProtonVPN': 'VPN/ProtonVPN',
     'PuffinSecureBrowser': 'Web/Browser/Puffin',
     'PushNotification': 'SystemFile/NotificationsDB',
     'Q_Dir': 'FileManager/QDir',
+    'qBittorrent': 'FileTransfer/qBittorrent',
     'QFinderPro__QNAP_': 'RMM/QFinderPro',
     'QlikSense': 'Analytics/QlikSense',
+    'Radmin': 'RMM/Radmin',
+    'RcloneConf': 'FileTransfer/Rclone',
     'RDPCache': 'RMM/RDP',
     'RDPJumplist': 'RMM/RDP',
     'RDPLogs': 'RMM/RDP',
-    'Radmin': 'RMM/Radmin',
-    'RcloneConf': 'FileTransfer/Rclone',
     'RecentFileCache': 'UserFile/RecentFileCache',
+    'RecentFolders': 'UserFile/RecentFolders',
     'RecycleBin': 'UserFile/RecycleBin',
     'RecycleBin_DataFiles': 'UserFile/RecycleBin',
     'RecycleBin_InfoFiles': 'UserFile/RecycleBin',
@@ -226,20 +242,15 @@ TARGETS_MAPPING = {
     'RustDesk': 'RMM/RustDesk',
     'SABnbzd': 'Reader/SABnbzd',
     'SCCMClientLogs': 'SystemFile/SCCMClient',
-    'SDB': 'SystemFile/SDB',
-    'SOFELK': 'Triage/SOFELK',
-    'SQLiteDatabases': 'Database/SQLite',
-    'SRUM': 'SystemFile/SRUM',
-    'SUM': 'SystemFile/SUM',
-    'SUPERAntiSpyware': 'Protection/SUPERAntiSpyware',
-    'SUSELinuxEnterpriseServer': 'WSL/SUSE_LES',
     'ScheduledTasks': 'SystemFile/ScheduledTasks',
     'ScreenConnect': 'RMM/ScreenConnect',
+    'SDB': 'SystemFile/SDB',
     'SecureAge': 'Protection/SecureAge',
     'SentinelOne': 'Protection/SentinelOne',
     'ServerTriage': 'Triage/Server',
-    'ShareX': 'Screenshot/ShareX',
+    'Session': 'UserFile/Session',
     'Shareaza': 'FileTransfer/Shareaza',
+    'ShareX': 'Screenshot/ShareX',
     'SiemensTIA': 'ICS/SiemensTIA',
     'Signal': 'Messaging/Signal',
     'SignatureCatalog': 'SystemFile/SignatureCatalog',
@@ -247,17 +258,23 @@ TARGETS_MAPPING = {
     'Slack': 'Messaging/Slack',
     'Snagit': 'Screenshot/Snagit',
     'SnipAndSketch': 'Screenshot/SnipAndSketch',
+    'SOFELK': 'Triage/SOFELK',
     'Sophos': 'Protection/Sophos',
     'Soulseek': 'FileTransfer/Soulseek',
     'SpeedCommander': 'FileManager/SpeedCommander',
     'Splashtop': 'RMM/Splashtop',
+    'SQLiteDatabases': 'Database/SQLite',
+    'SRUM': 'SystemFile/SRUM',
     'StartupFolders': 'SystemFile/StartupFolders',
     'StartupInfo': 'SystemFile/StartupInfo',
     'Steam': 'Gaming/Steam',
     'SublimeText': 'Editor/SublimeText',
     'SugarSync': 'FileTransfer/SugarSync',
+    'SUM': 'SystemFile/SUM',
     'SumatraPDF': 'Reader/SumatraPDF',
+    'SUPERAntiSpyware': 'Protection/SUPERAntiSpyware',
     'SupremoRemoteDesktop': 'RMM/SupremoRemoteDesktop',
+    'SUSELinuxEnterpriseServer': 'WSL/SUSE_LES',
     'Symantec_AV_Logs': 'Protection/Symantec',
     'Syscache': 'SystemFile/Syscache',
     'TablacusExplorer': 'FileManager/TablacusExplorer',
@@ -272,21 +289,17 @@ TARGETS_MAPPING = {
     'TotalCommander': 'FileManager/TotalCommander',
     'TreeSize': 'FileManager/TreeSize',
     'TrendMicro': 'Protection/TrendMicro',
+    'Ubuntu': 'WSL/Ubuntu',
     'UEMS': 'RMM/ManageEngine',
+    'Ultraviewer': 'RMM/Ultraviewer',
     'USBDetective': 'Protection/USBDetective',
     'USBDevicesLogs': 'SystemFile/USBDevices',
-    'Ubuntu': 'WSL/Ubuntu',
-    'Ultraviewer': 'RMM/Ultraviewer',
     'Usenet': 'FileTransfer/Usenet',
     'UsenetClients': 'FileTransfer/*',
     'UsersFolders': 'UserFile/*',
-    'VIPRE': 'Protection/VIPRE',
-    'VLC_Media_Player': 'Reader/VLC',
-    'VMware': 'Virtualization/VMware/*',
-    'VMwareInventory': 'Virtualization/VMware/Inventory',
-    'VMwareMemory': 'Virtualization/VMware/Memory',
-    'VNCLogs': 'RMM/VNC',
+    'uTorrent': 'FileTransfer/uTorrent',
     'Viber': 'Messaging/Viber',
+    'VIPRE': 'Protection/VIPRE',
     'VirtualBox': 'Virtualization/VirtualBox/*',
     'VirtualBoxConfig': 'Virtualization/VirtualBox/Config',
     'VirtualBoxLogs': 'Virtualization/VirtualBox/Logs',
@@ -294,16 +307,19 @@ TARGETS_MAPPING = {
     'VirtualDisks': 'Virtualization/*/VirtualDisks',
     'VisualStudioCode': 'Editor/Microsoft/VSCode',
     'Vivaldi': 'Web/Browser/Vivaldi',
+    'VLC_Media_Player': 'Reader/VLC',
+    'VMware': 'Virtualization/VMware/*',
+    'VMwareInventory': 'Virtualization/VMware/Inventory',
+    'VMwareMemory': 'Virtualization/VMware/Memory',
+    'VNCLogs': 'RMM/VNC',
     'WBEM': 'SystemFile/WBEM',
-    'WER': 'SystemFile/WER',
-    'WSL': 'WSL/*',
     'WebBrowsers': 'Web/Browser/*',
-    'WebServers': 'Web/Server/*',
     'Webroot': 'Protection/Webroot',
+    'WebServers': 'Web/Server/*',
+    'WER': 'SystemFile/WER',
     'WhatsApp': 'Messaging/WhatsApp',
     'WhatsApp_Media': 'UserFile/WhatsApp',
     'WinDefendDetectionHist': 'Protection/Defender',
-    'WinSCP': 'FileTransfer/WinSCP',
     'WindowsCopilotRecall': 'SystemFile/Recall',
     'WindowsDefender': 'Protection/Defender',
     'WindowsFirewall': 'Protection/WindowsFirewall',
@@ -319,49 +335,45 @@ TARGETS_MAPPING = {
     'WindowsTimeline': 'SystemFile/Timeline',
     'WindowsUpdate': 'SystemFile/Update',
     'WindowsYourPhone': 'SystemFile/YourPhone',
+    'WinSCP': 'FileTransfer/WinSCP',
+    'WSL': 'WSL/*',
+    'Xeox': 'RMM/Xeox',
     'XPRestorePoints': 'Backup/XPRestorePoints',
     'XYplorer': 'FileManager/XYplorer',
-    'Xeox': 'RMM/Xeox',
     'Yandex': 'Web/Browser/Yandex',
     'ZohoAssist': 'RMM/ZohoAssist',
     'Zoom': 'Messaging/Zoom',
-    'iTunesBackup': 'Backup/iTunes',
-    'mIRC': 'Messaging/mIRC',
-    'mRemoteNG': 'RMM/mRemoteNG',
-    'openSUSE': 'WSL/openSUSE',
-    'pCloudDatabase': 'FileTransfer/pCloud',
-    'qBittorrent': 'FileTransfer/qBittorrent',
-    'uTorrent': 'FileTransfer/uTorrent',
 }
-EXTRA_RULES = (
-    {
-        'Name': 'IIS Temporary ASP Files',
-        'Category': 'UserFile/IIS',
-        'Glob': 'Windows\\Microsoft.NET\\Framework*\\v*\\Temporary ASP.NET Files\\**10',
-        'Accessor': 'ntfs',
-        'Comment': 'Highly dependent on the configuration',
-    },
-    {
-        'Name': 'IIS ASP Files',
-        'Category': 'UserFile/IIS',
-        'Glob': 'inetpub\\wwwroot\\**10',
-        'Accessor': 'ntfs',
-        'Comment': 'Highly dependent on the configuration',
-    },
-    {
-        'Name': 'Exchange ASP Files',
-        'Category': 'SystemFile/Exchange',
-        'Glob': 'Program Files\\Microsoft\\Exchange Server\\V15\\FrontEnd\\HttpProxy\\owa\\auth\\**10',
-        'Accessor': 'ntfs',
-        'Comment': 'Highly dependent on the configuration',
-    },
-)
 
 
 CACHE_FILE = Path('/tmp/targets.yaml')
 SOURCE_URL = 'https://raw.githubusercontent.com/Velocidex/velociraptor/master/artifacts/definitions/Windows/KapeFiles/Targets.yaml'
-RULES_FILE = Path('windows.rules.csv')
-TARGETS_FILE = Path('windows.targets.csv')
+RULES_FILE = Path('rules.csv')
+TARGETS_FILE = Path('targets.csv')
+EXTRA_RULES_FILE = Path('rules.extra.csv')
+DELIMITER = ','
+QUOTECHAR = '"'
+LINETERMINATOR = '\n'
+
+
+def _read_csv(filepath: Path) -> RecordIterator:
+    with filepath.open('r', encoding='utf-8', newline='') as fobj:
+        reader = DictReader(fobj)
+        yield from reader
+
+
+def _write_csv(filepath: Path, fieldnames: list[str], records: RecordIterator):
+    with filepath.open('w', encoding='utf-8', newline='') as fobj:
+        writer = DictWriter(
+            fobj,
+            fieldnames,
+            delimiter=DELIMITER,
+            quotechar=QUOTECHAR,
+            lineterminator=LINETERMINATOR,
+        )
+        writer.writeheader()
+        for record in records:
+            writer.writerow(record)
 
 
 def _fetch_upstream_data():
@@ -397,7 +409,7 @@ def _populate_datasets(
         kape_rule['Id'] = int(kape_rule['Id'])
         windows_rules.append(kape_rule)
     # add extra rules
-    for extra_rule in EXTRA_RULES:
+    for extra_rule in _read_csv(EXTRA_RULES_FILE):
         next_id = len(windows_rules)
         category = extra_rule['Category']
         injected_rule = {'Id': next_id}
@@ -406,7 +418,11 @@ def _populate_datasets(
         windows_targets[category].add(next_id)
     # remap kape targets
     for kape_target in kape_targets:
-        group = TARGETS_MAPPING[kape_target['Group']]
+        try:
+            group = TARGETS_MAPPING[kape_target['Group']]
+        except KeyError:
+            print(kape_target)
+            raise
         if group is None:
             continue
         parts = group.split('/')
@@ -419,15 +435,8 @@ def _populate_datasets(
         windows_targets[group].update(rule_ids)
 
 
-def _write_csv(filepath, fieldnames, rows):
-    with filepath.open('w', encoding='utf-8', newline='') as fobj:
-        writer = DictWriter(fobj, fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
-
-
 def main():
+    """Entrypoint"""
     data = _fetch_upstream_data()
     kape_rules, kape_targets = _load_rules_and_targets(data)
     windows_rules = []

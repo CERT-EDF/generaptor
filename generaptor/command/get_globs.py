@@ -1,42 +1,40 @@
-"""get-globs command
-"""
+"""get-globs command"""
 
-from rich.box import ROUNDED
-from rich.table import Table
-from rich.console import Console
-from ..api import OperatingSystem, ruleset_from_targets
-from ..helper.logging import LOGGER
+from json import dumps
+
+from ..concept import (
+    OperatingSystem,
+    get_profile_mapping,
+    get_ruleset_from_targets,
+)
+from ..helper.logging import get_logger
+
+_LOGGER = get_logger('command.get_globs')
 
 
 def _get_globs_cmd(args):
+    opsystem = OperatingSystem(args.opsystem)
+    profile_mapping = get_profile_mapping(args.cache, args.config, opsystem)
+    profile = profile_mapping.get(args.profile)
+    if profile:
+        args.targets += profile.targets
     try:
-        rule_set = ruleset_from_targets(
-            args.cache,
-            args.config,
-            args.targets,
-            OperatingSystem(args.operating_system),
+        rule_set = get_ruleset_from_targets(
+            args.cache, args.config, args.targets, opsystem
         )
     except KeyboardInterrupt:
         print()
-        LOGGER.warning("operation canceled.")
+        _LOGGER.warning("operation canceled.")
         return
     if rule_set.empty:
-        LOGGER.warning("empty rule set, operation canceled.")
+        _LOGGER.warning("empty rule set, operation canceled.")
         return
-    table = Table(
-        "UID",
-        "Accessor",
-        "Glob",
-        box=ROUNDED,
-        expand=True,
-        highlight=False,
-        row_styles=['', 'dim'],
-        show_header=False,
-    )
     for rule in rule_set.rules.values():
-        table.add_row(str(rule.uid), rule.accessor, rule.glob)
-    console = Console()
-    console.print(table)
+        print(
+            dumps(
+                {'uid': rule.uid, 'accessor': rule.accessor, 'glob': rule.glob}
+            )
+        )
 
 
 def setup_cmd(cmd):
@@ -46,6 +44,10 @@ def setup_cmd(cmd):
         help="get globs matching collection targets",
     )
     get_globs.add_argument(
+        '--profile',
+        help="use given profile (non interactive)",
+    )
+    get_globs.add_argument(
         '--targets',
         metavar='target',
         default=[],
@@ -53,7 +55,7 @@ def setup_cmd(cmd):
         help="collection targets",
     )
     get_globs.add_argument(
-        'operating_system',
+        'opsystem',
         choices=[item.value for item in OperatingSystem],
         help="Operating system",
     )

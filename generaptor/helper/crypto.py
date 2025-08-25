@@ -1,39 +1,39 @@
-"""Cryptography helper
-"""
+"""Cryptography helper"""
 
-from os import getenv
-from typing import Optional
 from base64 import b64decode
-from pathlib import Path
-from getpass import getpass
-from secrets import token_urlsafe
 from datetime import datetime, timedelta, timezone
+from getpass import getpass
+from os import getenv
+from pathlib import Path
+from secrets import token_urlsafe
+
+from cryptography.hazmat.primitives.asymmetric.padding import MGF1, OAEP
+from cryptography.hazmat.primitives.asymmetric.rsa import (
+    RSAPrivateKey,
+    generate_private_key,
+)
+from cryptography.hazmat.primitives.hashes import SHA256, SHA512, Hash
+from cryptography.hazmat.primitives.serialization import (
+    BestAvailableEncryption,
+    Encoding,
+    PrivateFormat,
+    load_pem_private_key,
+)
 from cryptography.x509 import (
-    load_pem_x509_certificate,
-    random_serial_number,
-    SubjectAlternativeName,
-    CertificateBuilder,
-    NameAttribute,
     Certificate,
+    CertificateBuilder,
     DNSName,
     Name,
+    NameAttribute,
+    SubjectAlternativeName,
+    load_pem_x509_certificate,
+    random_serial_number,
 )
 from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives.hashes import Hash, SHA256, SHA512
-from cryptography.hazmat.primitives.serialization import (
-    load_pem_private_key,
-    BestAvailableEncryption,
-    PrivateFormat,
-    Encoding,
-)
-from cryptography.hazmat.primitives.asymmetric.rsa import (
-    generate_private_key,
-    RSAPrivateKey,
-)
-from cryptography.hazmat.primitives.asymmetric.padding import OAEP, MGF1
-from .logging import LOGGER
 
+from .logging import get_logger
 
+_LOGGER = get_logger('helper.crypto')
 VALIDITY = timedelta(days=30)
 CHUNK_SIZE = 8192
 RSA_KEY_SIZE = 4096
@@ -62,41 +62,25 @@ def pem_string(certificate: Certificate):
     return crt_pem_string
 
 
-def _provide_private_key_secret(
-    ask_password: bool = False, raise_if_generate: bool = False
-) -> str:
-    # attempt to load the secret from the environment
-    private_key_secret = getenv('GENERAPTOR_PK_SECRET')
-    # interactively ask the user for the secret if necessary
-    if not private_key_secret and ask_password:
-        private_key_secret = getpass("private key secret: ")
-    # generate and display the secret if necessary
-    if not private_key_secret:
-        if raise_if_generate:
-            raise ValueError("failed to provide private key secret")
-        private_key_secret = token_urlsafe(16)
-        LOGGER.warning("private key secret is %s", private_key_secret)
-        LOGGER.warning("store this secret in a vault please!")
-    return private_key_secret
-
-
-def _generate_self_signed_certificate(
-    output_directory: Path,
-    ask_password: bool = False,
-    private_key_secret: Optional[str] = None,
-) -> Certificate:
-    LOGGER.info("generating private key... please wait...")
+def generate_private_key_and_certificate(
+    validity: timedelta = timedelta(days=30),
+    common_name: str = 'generaptor',
+    key_size: int = RSA_KEY_SIZE,
+    public_exponent: int = RSA_PUBLIC_EXPONENT,
+) -> tuple[RSAPrivateKey, Certificate]:
+    """Generate (private_key, certificate)"""
+    _LOGGER.info("generating private key... please wait...")
     private_key = generate_private_key(
-        public_exponent=RSA_PUBLIC_EXPONENT,
-        key_size=RSA_KEY_SIZE,
+        public_exponent=public_exponent,
+        key_size=key_size,
     )
     subject_name = issuer_name = Name(
         [
-            NameAttribute(NameOID.COMMON_NAME, "generaptor"),
+            NameAttribute(NameOID.COMMON_NAME, common_name),
         ]
     )
     utc_now = datetime.now(timezone.utc)
-    LOGGER.info("generating certificate...")
+    _LOGGER.info("generating certificate...")
     certificate = (
         CertificateBuilder()
         .subject_name(
@@ -115,69 +99,111 @@ def _generate_self_signed_certificate(
             utc_now,
         )
         .not_valid_after(
-            utc_now + VALIDITY,
+            utc_now + validity,
         )
         .add_extension(
-            SubjectAlternativeName([DNSName("generaptor")]),
+            SubjectAlternativeName([DNSName(common_name)]),
             critical=False,
         )
         .sign(private_key, SHA256())
     )
+    return private_key, certificate
+
+
+def private_key_to_pem_bytes(
+    private_key: RSAPrivateKey, private_key_secret: bytes
+) -> bytes:
+    """RSA private key to PEM bytes"""
+    return private_key.private_bytes(
+        encoding=Encoding.PEM,
+        format=PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=BestAvailableEncryption(private_key_secret),
+    )
+
+
+def private_key_from_pem_bytes(
+    pem_bytes: bytes, private_key_secret: bytes
+) -> RSAPrivateKey:
+    """RSA private key from PEM bytes"""
+    return load_pem_private_key(pem_bytes, private_key_secret)
+
+
+def certificate_to_pem_bytes(certificate: Certificate) -> bytes:
+    """Certificate to PEM bytes"""
+    return certificate.public_bytes(Encoding.PEM)
+
+
+def certificate_from_pem_bytes(pem_bytes: bytes) -> Certificate:
+    """Certificate from PEM bytes"""
+    return load_pem_x509_certificate(pem_bytes)
+
+
+def _provide_private_key_secret(
+    ask_password: bool = False, raise_if_generate: bool = False
+) -> str:
+    # attempt to load the secret from the environment
+    private_key_secret = getenv('GENERAPTOR_PK_SECRET')
+    # interactively ask the user for the secret if necessary
+    if not private_key_secret and ask_password:
+        private_key_secret = getpass("private key secret: ")
+    # generate and display the secret if necessary
+    if not private_key_secret:
+        if raise_if_generate:
+            raise ValueError("failed to provide private key secret")
+        private_key_secret = token_urlsafe(16)
+        _LOGGER.warning("private key secret is %s", private_key_secret)
+        _LOGGER.warning("store this secret in a vault please!")
+    return private_key_secret
+
+
+def _generate_self_signed_certificate(
+    output_directory: Path,
+    ask_password: bool = False,
+    private_key_secret: str | None = None,
+) -> Certificate:
+    private_key, certificate = generate_private_key_and_certificate()
     # ensure output directory exists
     output_directory.mkdir(parents=True, exist_ok=True)
     # retrieve private key password
     private_key_secret = private_key_secret or _provide_private_key_secret(
         ask_password=ask_password
     )
-    # store encrypted private key in a file
+    private_key_secret = private_key_secret.encode('utf-8')
     fingerprint_hex = fingerprint(certificate)
+    # store encrypted private key in a file
     (output_directory / f'{fingerprint_hex}.key.pem').write_bytes(
-        private_key.private_bytes(
-            encoding=Encoding.PEM,
-            format=PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=BestAvailableEncryption(
-                private_key_secret.encode()
-            ),
-        ),
+        private_key_to_pem_bytes(private_key, private_key_secret)
     )
     # store certificate in a file
-    crt_pem_bytes = certificate.public_bytes(Encoding.PEM)
     (output_directory / f'{fingerprint_hex}.crt.pem').write_bytes(
-        crt_pem_bytes
+        certificate_to_pem_bytes(certificate)
     )
     return certificate
-
-
-def load_certificate(cert_filepath: Path):
-    """Load certificate from filepath"""
-    crt_pem_bytes = cert_filepath.read_bytes()
-    return load_pem_x509_certificate(crt_pem_bytes)
 
 
 def provide_x509_certificate(
     output_directory: Path,
-    cert_filepath: Optional[Path] = None,
+    cert_filepath: Path | None = None,
     ask_password: bool = False,
-    private_key_secret: Optional[str] = None,
-) -> str:
+    private_key_secret: str | None = None,
+) -> Certificate:
     """Provide x509 certificate"""
     if cert_filepath and cert_filepath.is_file():
-        certificate = load_certificate(cert_filepath)
-        LOGGER.info(
+        certificate = certificate_from_pem_bytes(cert_filepath.read_bytes())
+        _LOGGER.info(
             "using certificate %s fingerprint %s",
             cert_filepath,
             fingerprint(certificate),
         )
-    else:
-        certificate = _generate_self_signed_certificate(
-            output_directory, ask_password, private_key_secret
-        )
-    return certificate
+        return certificate
+    return _generate_self_signed_certificate(
+        output_directory, ask_password, private_key_secret
+    )
 
 
 def load_private_key(
-    private_key_path: Path, private_key_secret: Optional[str] = None
-) -> Optional[RSAPrivateKey]:
+    private_key_path: Path, private_key_secret: str | None = None
+) -> RSAPrivateKey | None:
     """Load PEM encoded encrypted private key from file"""
     try:
         private_key_secret = private_key_secret or _provide_private_key_secret(
@@ -186,9 +212,9 @@ def load_private_key(
     except (ValueError, KeyboardInterrupt):
         private_key_secret = None
     if not private_key_secret:
-        LOGGER.warning("failed to provide private key secret")
+        _LOGGER.warning("failed to provide private key secret")
         return None
-    return load_pem_private_key(
+    return private_key_from_pem_bytes(
         private_key_path.read_bytes(), private_key_secret.encode()
     )
 

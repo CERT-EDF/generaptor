@@ -1,30 +1,33 @@
-"""get-secret command
-"""
+"""get-secret command"""
 
+from json import dumps
 from pathlib import Path
-from ..api import Collection
+
+from ..concept import Collection
 from ..helper.crypto import RSAPrivateKey, load_private_key
-from ..helper.logging import LOGGER
+from ..helper.logging import get_logger
+
+_LOGGER = get_logger('command.get_secret')
 
 
 def _print_collection_secret(private_key: RSAPrivateKey, filepath: Path):
     collection = Collection(filepath=filepath)
-    LOGGER.info(
+    _LOGGER.info(
         "collection certificate fingerprint: %s", collection.fingerprint
     )
     try:
         secret = collection.secret(private_key)
     except ValueError:
-        LOGGER.error("private key does not match collection archive")
+        _LOGGER.error("private key does not match collection archive")
         return
-    print(f"{secret}:{filepath}")
+    print(dumps({'filepath': str(filepath), 'secret': secret}))
 
 
 def _get_secret_cmd(args):
     try:
         private_key = load_private_key(args.private_key)
     except ValueError:
-        LOGGER.error("invalid private key and/or passphrase")
+        _LOGGER.error("invalid private key and/or passphrase")
         return
     if not private_key:
         return
@@ -36,7 +39,7 @@ def _get_secret_cmd(args):
             for item in filepath.glob('Collection_*.zip'):
                 _print_collection_secret(private_key, item)
             continue
-        LOGGER.warning("skipped %s", filepath)
+        _LOGGER.warning("skipped %s", filepath)
 
 
 def setup_cmd(cmd):

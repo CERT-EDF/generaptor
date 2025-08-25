@@ -1,28 +1,29 @@
-"""refresh command
-"""
+"""refresh command"""
 
-from ..api import SUPPORTED_DISTRIBUTIONS
-from ..helper.http import http_set_proxies, http_download
+from ..concept import SUPPORTED_DISTRIBUTIONS
 from ..helper.github import github_release
-from ..helper.logging import LOGGER
+from ..helper.http import http_download, http_set_proxies
+from ..helper.logging import get_logger
+
+_LOGGER = get_logger('command.update')
 
 
 def _update_cmd(args):
-    LOGGER.info("updating...")
+    _LOGGER.info("updating...")
     args.cache.update(args.do_not_fetch)
-    LOGGER.info("cache updated.")
+    _LOGGER.info("cache updated.")
     if args.do_not_fetch:
         return
-    LOGGER.info("downloading %s release...", args.fetch_tag)
+    _LOGGER.info("downloading %s release...", args.fetch_tag)
     if args.proxy_url:
         http_set_proxies({'https': args.proxy_url})
     gh_release = github_release('velocidex', 'velociraptor', args.fetch_tag)
     if not gh_release:
-        LOGGER.error(
+        _LOGGER.error(
             "failed to find a valid realease for tag: %s", args.fetch_tag
         )
         return
-    LOGGER.info("velociraptor release matched: %s", gh_release.tag)
+    _LOGGER.info("velociraptor release matched: %s", gh_release.tag)
     downloaded = set()
     for asset in gh_release.assets:
         for distrib in SUPPORTED_DISTRIBUTIONS:
@@ -31,7 +32,7 @@ def _update_cmd(args):
             if not distrib.match_asset_name(asset.name):
                 continue
             downloaded.add(distrib)
-            LOGGER.info(
+            _LOGGER.info(
                 "%s matched asset '%s' (size=%d)",
                 distrib,
                 asset.name,
@@ -50,7 +51,7 @@ def setup_cmd(cmd):
     )
     update.add_argument(
         '--fetch-tag',
-        default='v0.72',
+        default='v0.74',
         help=(
             "fetch this tag, use 'latest' to fetch the latest version. "
             "Caution: fecthing another version than the default might "

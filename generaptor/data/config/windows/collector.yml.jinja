@@ -1,8 +1,8 @@
 # Adapted from https://github.com/Velocidex/velociraptor/blob/master/artifacts/definitions/Windows/KapeFiles/Targets.yaml
 autoexec:
-  argv: ["artifacts", "collect", "-v", "Windows.Collector.Entrypoint", "--require_admin"]
+  argv: ['artifacts', 'collect', '-v', 'Windows.Collector.Entrypoint', '--require_admin']
   artifact_definitions:
-    - name: Windows.Collector
+    - name: Windows.Collector.FileContent
       parameters:
         - name: UseAutoAccessor
           type: bool
@@ -17,34 +17,47 @@ autoexec:
         - name: NTFS_CACHE_TIME
           type: int
           description: How often to flush the NTFS cache. (Default is never).
-          default: "1000000"
+          default: '1000000'
         - name: FileGlobs
           type: hidden
           default: |
             Glob,Accessor
 {{ file_globs | indent(12, true) }}
       sources:
-        - name: All File Metadata
+        - name: Collection
           query: |
             LET VSS_MAX_AGE_DAYS <= VSSAnalysisAge
 
+            LET _ <= SELECT log(message="(custom) Loading ntfs globs...") FROM scope()
             LET ntfs_rule_specs <= SELECT Glob
-              FROM parse_csv(filename=FileGlobs, accessor="data")
+              FROM parse_csv(filename=FileGlobs, accessor='data')
               WHERE Accessor='ntfs'
-              AND log(message="Selecting ntfs glob: " + Glob)
+              AND log(
+                message=format(
+                  format="(custom) Loaded ntfs glob: %s",
+                  args=[Glob]
+                )
+              )
 
+            LET _ <= SELECT log(message="(custom) Loading lazy_ntfs globs...") FROM scope()
             LET lazy_ntfs_rule_specs <= SELECT Glob
-              FROM parse_csv(filename=FileGlobs, accessor="data")
+              FROM parse_csv(filename=FileGlobs, accessor='data')
               WHERE Accessor='lazy_ntfs'
-              AND log(message="Selecting auto glob: " + Glob)
+              AND log(
+                message=format(
+                  format="(custom) Loaded lazy_ntfs glob: %s",
+                  args=[Glob]
+                )
+              )
 
+            LET _ <= SELECT log(message="(custom) Starting generic file collector...") FROM scope()
             LET all_results <= SELECT * FROM if(
               condition=VSSAnalysisAge > 0,
               then={
                 -- For VSS we always need to parse NTFS
                 SELECT * FROM Artifact.Generic.Collectors.File(
                   Root=RootDevice,
-                  Accessor="ntfs_vss",
+                  Accessor='ntfs_vss',
                   collectionSpec=ntfs_rule_specs + lazy_ntfs_rule_specs
                 )
               }, else={
@@ -53,7 +66,7 @@ autoexec:
                     -- Special files we access with the ntfs parser.
                     SELECT * FROM Artifact.Generic.Collectors.File(
                       Root=RootDevice,
-                      Accessor="ntfs",
+                      Accessor='ntfs',
                       collectionSpec=ntfs_rule_specs
                     )
                   }, b={
@@ -64,8 +77,8 @@ autoexec:
                       Root=RootDevice,
                       Accessor=if(
                         condition=UseAutoAccessor,
-                        then="auto",
-                        else="lazy_ntfs"
+                        then='auto',
+                        else='lazy_ntfs'
                       ),
                       collectionSpec=lazy_ntfs_rule_specs
                     )
@@ -74,7 +87,7 @@ autoexec:
               }
             )
 
-            SELECT * FROM all_results WHERE _Source =~ "Metadata"
+            SELECT * FROM all_results WHERE _Source =~ 'Metadata'
 
     - name: Windows.Collector.Entrypoint
       parameters:
@@ -84,20 +97,22 @@ autoexec:
         - name: Collection
           query: |
             -- retrieve host information
+            LET _ <= SELECT log(message="(custom) Retrieving baseline...") FROM scope()
             LET baseline <= SELECT Fqdn FROM info()
 
-            -- generate a random bytes array
+            -- generate random bytes
+            LET _ <= SELECT log(message="(custom) Generating random values...") FROM scope()
             LET random <= SELECT format(
-              format="%02x",
+              format='%02x',
               args=rand(range=255)
             ) AS random_hex FROM range(end=25)
 
-            -- generate a password from random bytes array
-            LET secret <= SELECT join(
-              array=random.random_hex
-            ) AS value FROM scope()
+            -- generate a secret from random bytes
+            LET _ <= SELECT log(message="(custom) Generating secret...") FROM scope()
+            LET secret <= SELECT join(array=random.random_hex) AS value FROM scope()
 
             -- iterate on host NTFS devices
+            LET _ <= SELECT log(message="(custom) Perform artifacts collection...") FROM scope()
             SELECT * FROM foreach(
               row={
 
@@ -105,9 +120,24 @@ autoexec:
                 SELECT RootDevice FROM if(
                   condition=SelectedDevice!="",
                   then={
-                    SELECT SelectedDevice AS RootDevice FROM scope()
+                    SELECT SelectedDevice AS RootDevice FROM scope() WHERE log(
+                      message=format(
+                        format="(custom) Forced device: %s",
+                        args=[RootDevice]
+                      )
+                    )
                   }, else={
-                    SELECT Device AS RootDevice FROM filesystems() WHERE Fstype="NTFS"
+                    SELECT Device AS RootDevice FROM filesystems() WHERE log(
+                      message=format(
+                        format="(custom) Scanned device: %s (%s)",
+                        args=[RootDevice, Fstype]
+                      )
+                    ) AND Fstype="NTFS" AND log(
+                      message=format(
+                        format="(custom) Matched device: %s",
+                        args=[RootDevice]
+                      )
+                    )
                   }
                 )
 
@@ -117,41 +147,47 @@ autoexec:
                 -- perform artifacts collection
                 SELECT * FROM collect(
                   artifacts=[
-                      "Windows.Collector",
-                      "Windows.Network.Netstat",
-                      "Windows.Persistence.PermanentWMIEvents"
+                      'Windows.Network.Netstat',
+                      {%- if memdump %}
+                      'Windows.Memory.Acquisition',
+                      {%- endif %}
+                      'Windows.Collector.FileContent',
+                      'Windows.Persistence.PermanentWMIEvents'
                   ],
                   args=dict(
-                    `Windows.Collector`=dict(RootDevice=RootDevice),
+                    `Windows.Collector.FileContent`=dict(RootDevice=RootDevice),
                     `Windows.Persistence.PermanentWMIEvents`=dict(AllRootNamespaces="Y")
                   ),
                   output=regex_replace(
                     source=format(
-                      format="Collection_%s_%s_%s",
+                      format='Collection_%s_%s_%s',
                       args=[
                         baseline[0].Fqdn,
                         RootDevice,
                         timestamp(epoch=now()).MarshalText
                       ]
                     ),
-                    re="[^0-9A-Za-z\\-_]",
-                    replace="-"
-                  ) + ".zip",
+                    re='[^0-9A-Za-z\\-_]',
+                    replace='-'
+                  ) + '.zip',
                   metadata=dict(
+                    version="{{ version }}",
+                    created=timestamp(epoch=now()),
+                    opsystem='windows',
                     hostname=baseline[0].Fqdn,
                     device=RootDevice,
-                    scheme="x509",
+                    scheme='x509',
                     fingerprint_hex="{{ cert_fingerprint_hex }}",
                     b64_enc_secret=base64encode(
                       string=pk_encrypt(
-                        scheme="x509",
+                        scheme='x509',
                         data=secret.value,
                         public_key="{{ cert_data_pem_str }}"
                       )
                     )
                   ),
                   password=secret.value,
-                  format="json",
+                  format='json',
                   level=5
                 )
 

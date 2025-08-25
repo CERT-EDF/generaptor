@@ -1,10 +1,11 @@
 [project]
 name = "generaptor"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["cli", "generator", "velociraptor", "offline", "triage"]
 description = "A generator for Velociraptor-based offline collectors"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dynamic = ["version"]
 authors = [
   { name="CERT-EDF", email="cert@edf.fr" },
@@ -12,7 +13,6 @@ authors = [
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
@@ -20,12 +20,15 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "pick~=2.2",
-    "rich~=13.4",
+    "rich~=13.9",
     "jinja2~=3.1",
     "pyzipper~=0.3",
-    "cryptography~=42.0",
+    "cryptography~=44.0",
 ]
+
+
+[project.optional-dependencies]
+pick = ["pick~=2.4"]
 
 
 [project.urls]
@@ -39,7 +42,7 @@ generaptor = "generaptor.main:app"
 
 
 [build-system]
-requires = ["setuptools>=68", "setuptools_scm>=8.0", "wheel"]
+requires = ["setuptools>=78", "setuptools_scm>=8.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
@@ -55,3 +58,8 @@ version_file = "generaptor/__version__.py"
 [tool.black]
 line-length = 79
 skip-string-normalization = true
+
+
+[tool.isort]
+profile = "black"
+line_length = 79

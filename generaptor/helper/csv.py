@@ -1,5 +1,4 @@
-"""CSV helper
-"""
+"""CSV helper"""
 
 from csv import reader
 from pathlib import Path
@@ -13,5 +12,4 @@ def stream_csv(csv_filepath: Path):
             next(csv_reader)  # skip csv header
         except StopIteration:
             return
-        for row in csv_reader:
-            yield row
+        yield from csv_reader
