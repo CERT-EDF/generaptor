@@ -1,28 +1,26 @@
-"""HTTP helpers
-"""
+"""HTTP helpers"""
 
-from json import load, JSONDecodeError
-from shutil import copyfileobj
+from json import JSONDecodeError, load
 from pathlib import Path
-from urllib.request import (
-    install_opener,
-    build_opener,
-    urlopen,
-    ProxyHandler,
-)
+from shutil import copyfileobj
+from urllib.request import ProxyHandler, build_opener, install_opener, urlopen
+
 from rich.progress import wrap_file
-from .logging import LOGGER
+
+from .logging import get_logger
+
+_LOGGER = get_logger('helper.http')
 
 
 def http_set_proxies(proxies):
     """Configure proxies"""
-    LOGGER.info("using proxies %s", proxies)
+    _LOGGER.info("using proxies %s", proxies)
     install_opener(build_opener(ProxyHandler(proxies)))
 
 
 def http_download(url: str, filepath: Path):
     """Download a resource and store it inside a file"""
-    LOGGER.info("downloading from %s", url)
+    _LOGGER.info("downloading from %s", url)
     with urlopen(url) as response:
         size = int(response.headers['Content-Length'])
         with wrap_file(
@@ -34,13 +32,13 @@ def http_download(url: str, filepath: Path):
 
 def http_get_json(url: str):
     """GET a JSON resource"""
-    LOGGER.info("requesting %s", url)
+    _LOGGER.info("requesting %s", url)
     with urlopen(url) as response:
         if response.status != 200:
-            LOGGER.error("response status %d", response.status)
+            _LOGGER.error("response status %d", response.status)
             return None
         try:
             return load(response)
         except JSONDecodeError:
-            LOGGER.error("failed to decode json data!")
+            _LOGGER.error("failed to decode json data!")
     return None

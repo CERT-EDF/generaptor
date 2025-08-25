@@ -162,3 +162,4 @@ Id,Name,Category,Glob,Accessor,Comment
 162,Git File,Program/Git,home/*/.gitconfig,file,
 163,Git File,Program/Git,home/*/**10/.git/config,file,
 164,Git File,Program/Git,home/*/**10/.git/hooks/*,file,
+165,APT File,Installer/APT,etc/apt/sources.list.d/*.sources,file,

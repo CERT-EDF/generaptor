@@ -1,2 +1,1 @@
-"""Helper package
-"""
+"""Helper package"""

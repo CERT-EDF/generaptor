@@ -1,13 +1,15 @@
-"""Target Set API
-"""
+"""Generaptor Target Set"""
 
+from dataclasses import dataclass
 from json import loads
 from pathlib import Path
-from dataclasses import dataclass
-from .ruleset import RuleSet
+
 from ..helper.csv import stream_csv
+from ..helper.logging import get_logger
 from ..helper.prompt import multiselect
-from ..helper.logging import LOGGER
+from .ruleset import RuleSet
+
+_LOGGER = get_logger('concept.targetset')
 
 
 @dataclass
@@ -40,15 +42,16 @@ class TargetSet:
 
     def select(self, rule_set: RuleSet, targets: list[str]) -> RuleSet:
         """Build a rule set from an existing ruleset and selected targets"""
-        title = "Pick one or more collection targets"
         options = list(sorted(self.targets.keys()))
         if not targets:
-            targets = multiselect(title, options)
+            targets = multiselect(
+                "Pick one or more collection targets", options
+            )
         rules = {}
         for name in targets:
             target = self.targets.get(name)
             if not target:
-                LOGGER.warning("skipped unknown target ('%s')", name)
+                _LOGGER.warning("skipped unknown target ('%s')", name)
                 continue
             rules.update(
                 {
@@ -56,7 +59,7 @@ class TargetSet:
                     for rule_uid in target.rule_uids
                 }
             )
-            LOGGER.info(
+            _LOGGER.info(
                 "select %s (%d rules)", target.name, len(target.rule_uids)
             )
         return RuleSet(rules=rules)

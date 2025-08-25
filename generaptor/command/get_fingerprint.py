@@ -1,18 +1,21 @@
-"""get-fingerprint command
-"""
+"""get-fingerprint command"""
 
+from json import dumps
 from pathlib import Path
-from ..api import Collection
-from ..helper.logging import LOGGER
+
+from ..concept import Collection
+from ..helper.logging import get_logger
+
+_LOGGER = get_logger('command.get_fingerprint')
 
 
 def _print_collection_fingerprint(filepath: Path):
     collection = Collection(filepath=filepath)
     fingerprint = collection.fingerprint
     if not fingerprint:
-        LOGGER.error("failed to retrieve collection fingerprint")
+        _LOGGER.error("failed to retrieve collection fingerprint")
         return
-    print(f"{fingerprint}:{filepath}")
+    print(dumps({'filepath': str(filepath), 'fingerprint': fingerprint}))
 
 
 def _get_fingerprint_cmd(args):
@@ -24,7 +27,7 @@ def _get_fingerprint_cmd(args):
             for item in filepath.glob('Collection_*.zip'):
                 _print_collection_fingerprint(item)
             continue
-        LOGGER.warning("skipped %s", filepath)
+        _LOGGER.warning("skipped %s", filepath)
 
 
 def setup_cmd(cmd):

@@ -1,9 +1,8 @@
-"""Github helpers
-"""
+"""Github helpers"""
 
-from typing import Optional
-from operator import attrgetter
 from dataclasses import dataclass
+from operator import attrgetter
+
 from .http import http_get_json
 
 
@@ -49,7 +48,7 @@ class GithubRelease:
 
 def github_release(
     owner: str, repository: str, tag: str = 'latest'
-) -> Optional[GithubRelease]:
+) -> GithubRelease | None:
     """Get a summary of the latest release published in a Github repository"""
     page = 1
     while page:

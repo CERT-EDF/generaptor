@@ -1,2 +1,1 @@
-"""Generaptor module
-"""
+"""Generaptor module"""

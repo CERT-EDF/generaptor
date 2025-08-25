@@ -1,0 +1,6 @@
+Name,Category,Glob,Accessor,Comment
+IIS ASP Files,UserFile/IIS,inetpub\wwwroot\**10,lazy_ntfs,Highly dependent on the configuration
+IIS Temporary ASP Files,UserFile/IIS,Windows\Microsoft.NET\Framework*\v*\Temporary ASP.NET Files\**10,lazy_ntfs,Highly dependent on the configuration
+Exchange ASP Files,SystemFile/Exchange,Program Files\Microsoft\Exchange Server\V15\FrontEnd\HttpProxy\owa\auth\**10,lazy_ntfs,Highly dependent on the configuration
+SmartScreen ADS,UserFile/ADS,users\**10\*:SmartScreen,ntfs
+Zone.Identifier ADS,UserFile/ADS,users\**10\*:Zone.Identifier,ntfs

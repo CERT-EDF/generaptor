@@ -17,12 +17,15 @@ Dependencies are listed in [pyproject.toml](pyproject.toml) under `dependencies`
 
 ## Setup
 
-The setup is the same for Linux, Windows and Darwin as long as Python 3.9+ is
+The setup is the same for Linux, Windows and Darwin as long as Python 3.12+ is
 installed and registered in the PATH environment variable. Using a Python virtual
 environment is recommended.
 
 ```bash
+# install without interactive prompt support
 python3 -m pip install git+https://github.com/cert-edf/generaptor
+# install with interactive prompt support
+python3 -m pip install 'generaptor[pick] @ git+https://github.com/cert-edf/generaptor'
 ```
 
 
@@ -52,11 +55,12 @@ generaptor generate windows -h
 # Generate a single-device collector for windows
 # (windows default collector collects all devices)
 generaptor generate windows --device D:
-# Collector targets customization (interactive)
+# Collector targets customization
+# (require interactive prompt support, see setup)
 generaptor generate --custom windows
 # Collector targets customization using a profile (non interactive)
-echo '{"targets":["WebServer/IIS"]}' > iis_server.json
-generaptor generate --custom-profile iis_server.json windows
+echo '{"targets":["WebServer/IIS"]}' > ~/.config/generaptor/windows/iis_server.json
+generaptor generate --profile iis_server windows
 ```
 
 
@@ -75,13 +79,13 @@ After starting generaptor for the first time, you can use the following commands
 export CACHE="${HOME}/.cache/generaptor"
 export CONFIG="${HOME}/.config/generaptor"
 # Copy header for each file
-head -n 1 "${CACHE}/linux.rules.csv" > "${CONFIG}/linux.rules.csv"
-head -n 1 "${CACHE}/linux.targets.csv" > "${CONFIG}/linux.targets.csv"
-head -n 1 "${CACHE}/windows.rules.csv" > "${CONFIG}/windows.rules.csv"
-head -n 1 "${CACHE}/windows.targets.csv" > "${CONFIG}/windows.targets.csv"
+head -n 1 "${CACHE}/config/linux/rules.csv" > "${CONFIG}/linux/rules.csv"
+head -n 1 "${CACHE}/config/linux/targets.csv" > "${CONFIG}/linux/targets.csv"
+head -n 1 "${CACHE}/config/windows/rules.csv" > "${CONFIG}/windows/rules.csv"
+head -n 1 "${CACHE}/config/windows/targets.csv" > "${CONFIG}/windows/targets.csv"
 # Copy VQL templates
-cp "${CACHE}/linux.collector.yml.jinja" "${CONFIG}/"
-cp "${CACHE}/windows.collector.yml.jinja" "${CONFIG}/"
+cp "${CACHE}/config/linux/collector.yml.jinja" "${CONFIG}/linux/"
+cp "${CACHE}/config/windows/collector.yml.jinja" "${CONFIG}/windows/"
 ```
 
 
@@ -94,9 +98,3 @@ generaptor extract \
            private.key.pem \
            Collection_COMPUTERNAME_DEVICENAME_YYYY-mm-ddTHH-MM-SS.zip
 ```
-
-## Contributors
-
-- [koromodako](https://github.com/koromodako)
-- [SPToast](https://github.com/SPToast)
-- [td2m](https://github.com/td2m)

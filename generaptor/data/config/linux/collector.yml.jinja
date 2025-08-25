@@ -1,0 +1,105 @@
+#
+# Linux collector autoexec configuration
+#
+autoexec:
+  argv: ['artifacts', 'collect', '-v', 'Linux.Collector.Entrypoint', '--require_admin']
+  artifact_definitions:
+    - name: Linux.Collector.FileContent
+      parameters:
+        - name: Device
+          default: "{{ device }}"
+        - name: FileGlobs
+          type: hidden
+          default: |
+            Glob,Accessor
+{{ file_globs | indent(12, true) }}
+      sources:
+        - name: Collection
+          query: |
+            -- load globs
+            LET _ <= SELECT log(message="(custom) Loading globs...") FROM scope()
+            LET rule_specs <= SELECT Glob
+              FROM parse_csv(filename=FileGlobs, accessor='data')
+              WHERE Accessor='file'
+              AND log(
+                message=format(
+                  format="(custom) Glob loaded: %s",
+                  args=[Glob]
+                )
+              )
+
+            -- run generic file collector
+            LET _ <= SELECT log(message="(custom) Starting generic file collector...") FROM scope()
+            LET all_results <= SELECT * FROM Artifact.Generic.Collectors.File(
+              Root=Device,
+              Accessor='file',
+              collectionSpec=rule_specs
+            )
+
+            SELECT * FROM all_results WHERE _Source =~ 'Metadata'
+
+    - name: Linux.Collector.FileMetadata
+      sources:
+        - name: Collection
+          query: |
+            -- best effort file metadata collection
+            SELECT Stdout FROM execve(argv=['find', '/', '-ls'], sep='\n')
+
+    - name: Linux.Collector.Entrypoint
+      sources:
+        - name: Collection
+          query: |
+            -- retrieve host information
+            LET _ <= SELECT log(message="(custom) Retrieving baseline...") FROM scope()
+            LET baseline <= SELECT Fqdn FROM info()
+
+            -- generate a random bytes array
+            LET _ <= SELECT log(message="(custom) Generating random values...") FROM scope()
+            LET random <= SELECT format(
+              format='%02x', args=rand(range=255)
+            ) AS random_hex FROM range(end=25)
+
+            -- generate a password from random bytes array
+            LET _ <= SELECT log(message="(custom) Generating secret...") FROM scope()
+            LET secret <= SELECT join(array=random.random_hex) AS value FROM scope()
+
+            -- perform artifacts collection
+            LET _ <= SELECT log(message="(custom) Performing artifact collection...") FROM scope()
+            SELECT * FROM collect(
+              artifacts=[
+                'Linux.Network.Netstat',
+                'Linux.Collector.FileContent',
+                'Linux.Collector.FileMetadata'
+              ],
+              output=regex_replace(
+                source=format(
+                  format='Collection_%s_%s_%s',
+                  args=[
+                    baseline[0].Fqdn,
+                    "{{ device }}",
+                    timestamp(epoch=now()).MarshalText
+                  ]
+                ),
+                re='[^0-9A-Za-z\\-_]',
+                replace='-'
+              ) + '.zip',
+              metadata=dict(
+                version="{{ version }}",
+                created=timestamp(epoch=now()),
+                opsystem='linux',
+                hostname=baseline[0].Fqdn,
+                device='',
+                scheme='x509',
+                fingerprint_hex="{{ cert_fingerprint_hex }}",
+                b64_enc_secret=base64encode(
+                  string=pk_encrypt(
+                    scheme='x509',
+                    data=secret.value,
+                    public_key="{{ cert_data_pem_str }}"
+                  )
+                )
+              ),
+              password=secret.value,
+              format='json',
+              level=5
+            )

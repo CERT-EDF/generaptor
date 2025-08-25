@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Application
-"""
+"""Application"""
 from argparse import ArgumentParser
-from .command import setup_commands
+
 from .__version__ import version
-from .api import Cache, Config
-from .helper.logging import LOGGER
+from .command import setup_commands
+from .concept import Cache, Config
+from .helper.logging import get_logger
+
+_LOGGER = get_logger('main')
 
 
 def _parse_args():
@@ -14,13 +16,13 @@ def _parse_args():
     )
     parser.add_argument(
         '--cache',
-        type=Cache,
+        type=Cache.from_string,
         default=Cache(),
         help="Set cache directory",
     )
     parser.add_argument(
         '--config',
-        type=Config,
+        type=Config.from_string,
         default=Config(),
         help="Set config directory",
     )
@@ -32,11 +34,11 @@ def _parse_args():
 
 def app():
     """Application entry point"""
-    LOGGER.info("Generaptor v%s", version)
+    _LOGGER.info("Generaptor v%s", version)
     args = _parse_args()
     args.config.directory.mkdir(parents=True, exist_ok=True)
     if not args.cache.directory.is_dir() and args.cmd != 'update':
-        LOGGER.error(
+        _LOGGER.error(
             "cache update is needed, please run 'update' command first"
         )
         return

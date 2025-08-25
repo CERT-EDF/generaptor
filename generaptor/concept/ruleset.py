@@ -1,10 +1,12 @@
-"""Rule Set API
-"""
+"""Generaptor Rule Set"""
 
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
+
 from ..helper.csv import stream_csv
-from ..helper.logging import LOGGER
+from ..helper.logging import get_logger
+
+_LOGGER = get_logger('concept.ruleset')
 
 
 @dataclass
@@ -48,7 +50,7 @@ class RuleSet:
             try:
                 uid, name, category, glob, accessor, comment = row
             except ValueError:
-                LOGGER.warning("skipped invalid ruleset row: %s", row)
+                _LOGGER.warning("skipped invalid ruleset row: %s", row)
                 continue
             rules[int(uid)] = Rule(
                 uid=int(uid),
