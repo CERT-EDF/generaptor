@@ -98,3 +98,10 @@ generaptor extract \
            private.key.pem \
            Collection_COMPUTERNAME_DEVICENAME_YYYY-mm-ddTHH-MM-SS.zip
 ```
+
+
+## Past contributors (until version 10.0.2)
+
+- [koromodako](https://github.com/koromodako)
+- [SPToast](https://github.com/SPToast)
+- [td2m](https://github.com/td2m)
