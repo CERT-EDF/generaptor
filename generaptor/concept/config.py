@@ -61,10 +61,14 @@ class Config:
         directory = self.directory / opsystem.value / 'profiles'
         if not directory.is_dir():
             return {}
-        return {
-            filepath.stem: Profile.from_filepath(filepath)
-            for filepath in directory.glob('*.json')
-        }
+        mapping = {}
+        for filepath in directory.glob('*.json'):
+            profile = Profile.from_filepath(filepath)
+            if not profile:
+                _LOGGER.warning("skipped invalid profile from %s", filepath)
+                continue
+            mapping[filepath.stem] = profile
+        return mapping
 
     def vql_template(self, opsystem: OperatingSystem) -> Template | None:
         """Load jinja template matching given operating system"""

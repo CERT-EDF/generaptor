@@ -1,9 +1,12 @@
 """Generaptor Profile"""
 
 from dataclasses import dataclass
-from json import loads
+from json import JSONDecodeError, loads
 from pathlib import Path
 
+from ..helper.logging import get_logger
+
+_LOGGER = get_logger('concept.profile')
 
 @dataclass(frozen=True)
 class Profile:
@@ -14,8 +17,11 @@ class Profile:
     @classmethod
     def from_filepath(cls, filepath: Path):
         """Build instance from filepath"""
-        data = filepath.read_text(encoding='utf-8')
-        dct = loads(data)
+        try:
+            dct = loads(filepath.read_text(encoding='utf-8'))
+        except (JSONDecodeError, FileNotFoundError, UnicodeDecodeError):
+            _LOGGER.exception("cannot load profile from %s", filepath)
+            return None
         return cls(targets=dct.get('targets', []))
 
 
