@@ -93,7 +93,8 @@ def setup_target(target):
         '--vss-analysis-age',
         type=int,
         default=0,
-        help="analyze VSS within this many days ago, 0 means no VSS analysis",
+        metavar='N',
+        help="analyze VSS within N days ago, 0 means no VSS analysis",
     )
     windows.add_argument(
         '--dont-be-lazy',

@@ -45,7 +45,7 @@ def setup_cmd(cmd):
     )
     get_globs.add_argument(
         '--profile',
-        help="use given profile (non interactive)",
+        help="use given profile (non-interactive)",
     )
     get_globs.add_argument(
         '--targets',

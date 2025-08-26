@@ -58,7 +58,7 @@ generaptor generate windows --device D:
 # Collector targets customization
 # (require interactive prompt support, see setup)
 generaptor generate --custom windows
-# Collector targets customization using a profile (non interactive)
+# Collector targets customization using a profile (non-interactive)
 echo '{"targets":["WebServer/IIS"]}' > ~/.config/generaptor/windows/iis_server.json
 generaptor generate --profile iis_server windows
 ```
