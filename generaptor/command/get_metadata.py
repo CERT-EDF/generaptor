@@ -1,12 +1,10 @@
-"""get-metadata command
-"""
+"""get-metadata command"""
 
 from json import dumps
 from pathlib import Path
 
 from ..concept import Collection
 from ..helper.logging import get_logger
-
 
 _LOGGER = get_logger('command.get_metadata')
 

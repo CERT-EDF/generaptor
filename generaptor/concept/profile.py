@@ -8,6 +8,7 @@ from ..helper.logging import get_logger
 
 _LOGGER = get_logger('concept.profile')
 
+
 @dataclass(frozen=True)
 class Profile:
     """Profile file"""
