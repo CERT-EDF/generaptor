@@ -20,7 +20,7 @@ def setup_cmd(cmd):
     generate.add_argument(
         '--profile',
         default='default',
-        help="use given profile (non interactive)",
+        help="use given profile (non-interactive)",
     )
     generate.add_argument(
         '--output-directory',
