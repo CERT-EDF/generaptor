@@ -6,7 +6,7 @@ from ..helper.http import http_download, http_set_proxies
 from ..helper.logging import get_logger
 
 _LOGGER = get_logger('command.update')
-
+_FETCH_TAG_DEFAULT = 'v0.75'
 
 def _update_cmd(args):
     _LOGGER.info("updating...")
@@ -51,11 +51,11 @@ def setup_cmd(cmd):
     )
     update.add_argument(
         '--fetch-tag',
-        default='v0.74',
+        default=_FETCH_TAG_DEFAULT,
         help=(
             "fetch this tag, use 'latest' to fetch the latest version. "
-            "Caution: fecthing another version than the default might "
-            "break the collector"
+            "Caution, fecthing another version than the default might "
+            f"break the collector. Default tag is {_FETCH_TAG_DEFAULT}"
         ),
     )
     update.add_argument('--proxy-url', help="set proxy url")
