@@ -1,0 +1,19 @@
+name: "Feature request"
+description: Create a feature request
+title: "[FR] - "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: "Use case description"
+      description: Describe your use case
+    validations:
+      required: true
+  - type: textarea
+    id: implementation-proposal
+    attributes:
+      label: "Implementation proposal"
+      description: Describe how this use case may be implemented
+    validations:
+      required: true
