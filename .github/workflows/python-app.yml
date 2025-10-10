@@ -1,4 +1,4 @@
-name: Generaptor check
+name: Generaptor Check
 
 on:
   pull_request:
@@ -13,12 +13,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
     - name: Setup Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
-    - name: Install Dependencies
+    - name: Setup Generaptor
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install .
