@@ -8,6 +8,7 @@ from ..helper.logging import get_logger
 _LOGGER = get_logger('command.update')
 _FETCH_TAG_DEFAULT = 'v0.75'
 
+
 def _update_cmd(args):
     _LOGGER.info("updating...")
     args.cache.update(args.do_not_fetch)

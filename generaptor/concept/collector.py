@@ -95,7 +95,7 @@ class Collector:
         if not platform_binary:
             _LOGGER.critical("unsupported platform!")
             return None
-        if system() == 'Linux':
+        if system() in {'Linux', 'Darwin'}:
             platform_binary.chmod(0o700)
         # ensure that output directory exists
         directory.mkdir(parents=True, exist_ok=True)

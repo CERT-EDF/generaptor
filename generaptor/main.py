@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Application"""
+
 from argparse import ArgumentParser
 
 from .__version__ import version
