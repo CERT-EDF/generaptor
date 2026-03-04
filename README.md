@@ -52,6 +52,7 @@ generaptor -h
 generaptor generate -h
 generaptor generate linux -h
 generaptor generate windows -h
+generaptor generate darwin -h
 ```
 
 <br>
@@ -75,9 +76,12 @@ head -n 1 "${CACHE}/config/linux/rules.csv" > "${CONFIG}/linux/rules.csv"
 head -n 1 "${CACHE}/config/linux/targets.csv" > "${CONFIG}/linux/targets.csv"
 head -n 1 "${CACHE}/config/windows/rules.csv" > "${CONFIG}/windows/rules.csv"
 head -n 1 "${CACHE}/config/windows/targets.csv" > "${CONFIG}/windows/targets.csv"
+head -n 1 "${CACHE}/config/darwin/rules.csv" > "${CONFIG}/darwin/rules.csv"
+head -n 1 "${CACHE}/config/darwin/targets.csv" > "${CONFIG}/darwin/targets.csv"
 # Copy VQL templates
 cp "${CACHE}/config/linux/collector.yml.jinja" "${CONFIG}/linux/"
 cp "${CACHE}/config/windows/collector.yml.jinja" "${CONFIG}/windows/"
+cp "${CACHE}/config/darwin/collector.yml.jinja" "${CONFIG}/darwin/"
 ```
 
 <br>
