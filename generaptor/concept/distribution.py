@@ -61,4 +61,12 @@ SUPPORTED_DISTRIBUTIONS = [
         arch=Architecture.AMD64,
         opsystem=OperatingSystem.WINDOWS,
     ),
+    Distribution(
+        arch=Architecture.AMD64,
+        opsystem=OperatingSystem.DARWIN,
+    ),
+    Distribution(
+        arch=Architecture.ARM64,
+        opsystem=OperatingSystem.DARWIN,
+    ),
 ]
