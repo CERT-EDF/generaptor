@@ -20,15 +20,15 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "rich~=14.1",
+    "rich~=14.3",
     "jinja2~=3.1",
     "pyzipper~=0.3",
-    "cryptography~=44.0",
+    "cryptography~=46.0",
 ]
 
 
 [project.optional-dependencies]
-pick = ["pick~=2.4"]
+pick = ["pick~=2.6"]
 
 
 [project.urls]
@@ -42,7 +42,7 @@ generaptor = "generaptor.main:app"
 
 
 [build-system]
-requires = ["setuptools>=78", "setuptools_scm>=8.2", "wheel"]
+requires = ["setuptools>=82", "setuptools_scm>=9.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
