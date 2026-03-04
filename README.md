@@ -22,9 +22,7 @@
 
 Generaptor is a platform-agnostic command line tool to generate a [Velociraptor](https://github.com/velocidex/velociraptor) offline collector based on pre-configured or customizable collection profiles.
 
-All platforms can generate collectors for all targets, there is no limitation thanks to Python on the generation side and velociraptor on the configuration repacking side.
-
-Generation of Darwin collector is not implemented for the moment due to the lack of use case on our side. Feel free to open a pull request regarding this feature.
+All platforms (Linux, Windows and Darwin) can generate collectors for all targets (Linux, Windows and Darwin), there is no limitation thanks to Python on the generation side and velociraptor on the configuration repacking side.
 
 <br>
 
