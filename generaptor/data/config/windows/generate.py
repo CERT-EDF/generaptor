@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate windows.targets.csv and windows.rules.csv"""
+
 from collections import defaultdict
 from collections.abc import Iterator
 from csv import DictReader, DictWriter

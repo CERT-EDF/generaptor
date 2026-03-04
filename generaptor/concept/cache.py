@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from platform import architecture, libc_ver, system
+from platform import architecture, libc_ver, machine, system
 from shutil import copytree
 
 from ..helper.logging import get_logger
@@ -13,16 +13,40 @@ from .distribution import Architecture, Distribution, OperatingSystem
 _LOGGER = get_logger('concept.cache')
 _HERE = Path(__file__).resolve()
 _PKG_DATA_DIR = _HERE.parent.parent / 'data'
-_PLATFORM_DISTRIBUTION_MAP = {
-    ('Linux', 'glibc'): Distribution(
-        arch=Architecture.AMD64, opsystem=OperatingSystem.LINUX
-    ),
-    ('Linux', ''): Distribution(
+
+
+def _darwin_identify_dist() -> Distribution:
+    arch = machine().lower()
+    if 'arm' in arch:
+        return Distribution(
+            arch=Architecture.ARM64, opsystem=OperatingSystem.DARWIN
+        )
+    return Distribution(
+        arch=Architecture.AMD64, opsystem=OperatingSystem.DARWIN
+    )
+
+
+def _linux_identify_dist() -> Distribution:
+    lib, _ = libc_ver()
+    if lib == 'glibc':
+        return Distribution(
+            arch=Architecture.AMD64, opsystem=OperatingSystem.LINUX
+        )
+    return Distribution(
         arch=Architecture.AMD64_MUSL, opsystem=OperatingSystem.LINUX
-    ),
-    ('Windows', ''): Distribution(
+    )
+
+
+def _windows_identify_dist() -> Distribution:
+    return Distribution(
         arch=Architecture.AMD64, opsystem=OperatingSystem.WINDOWS
-    ),
+    )
+
+
+_SYSTEM_IDENTIFY_DIST_MAP = {
+    'Darwin': _darwin_identify_dist,
+    'Linux': _linux_identify_dist,
+    'Windows': _windows_identify_dist,
 }
 
 
@@ -80,10 +104,12 @@ class Cache:
         if bits != '64bit':
             _LOGGER.critical("current machine architecture is not supported!")
             return None
-        lib, _ = libc_ver()
-        platform_distrib_id = (system(), lib)
-        dist = _PLATFORM_DISTRIBUTION_MAP.get(platform_distrib_id)
-        if not dist:
+        identify_dist = _SYSTEM_IDENTIFY_DIST_MAP.get(system())
+        if not identify_dist:
             _LOGGER.critical("current machine distribution is not supported!")
             return None
-        return self.template_binary(dist)
+        distribution = identify_dist()
+        if not distribution:
+            _LOGGER.critical("current machine distribution is not supported!")
+            return None
+        return self.template_binary(distribution)

@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from ...helper.prompt import INTERACTIVE_PROMPT_AVAILABLE
+from .darwin import setup_target as setup_darwin
 from .linux import setup_target as setup_linux
 from .windows import setup_target as setup_windows
 
@@ -46,5 +47,6 @@ def setup_cmd(cmd):
     )
     target = generate.add_subparsers(dest='target')
     target.required = True
+    setup_darwin(target)
     setup_linux(target)
     setup_windows(target)
