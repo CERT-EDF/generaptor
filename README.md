@@ -35,6 +35,8 @@ Generaptor releases are available on Github and Pypi. The setup is the same for 
 python3 -m pip install generaptor
 # Setup generaptor w/ interactive cli
 python3 -m pip install generaptor[pick]
+# Setup certifi (Darwin only)
+python3 -m pip install certifi
 # Setup configuration files and fetch latest stable release of velociraptor
 generaptor update
 # Create a collector for windows for instance
@@ -44,7 +46,7 @@ generaptor generate -o /tmp/generaptor windows
 # Perform collection on target
 # Then retrieve collection archive and extract
 generaptor extract \
-           --directory /tmp/collection \
+           --output-directory /tmp/collection \
            /tmp/generaptor/*.key.pem \
            Collection_COMPUTER_DEVICE_YYYY-mm-ddTHH-MM-SS.zip
 # Check integrated help for more options
