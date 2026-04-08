@@ -12,6 +12,8 @@ class Architecture(Enum):
     AMD64 = 'amd64'
     AMD64_MUSL = 'amd64-musl'
     ARM64 = 'arm64'
+    X86_LEGACY = '386-legacy'
+    AMD64_LEGACY = 'amd64-legacy'
 
 
 class OperatingSystem(Enum):
@@ -59,6 +61,14 @@ SUPPORTED_DISTRIBUTIONS = [
     ),
     Distribution(
         arch=Architecture.AMD64,
+        opsystem=OperatingSystem.WINDOWS,
+    ),
+    Distribution(
+        arch=Architecture.X86_LEGACY,
+        opsystem=OperatingSystem.WINDOWS,
+    ),
+    Distribution(
+        arch=Architecture.AMD64_LEGACY,
         opsystem=OperatingSystem.WINDOWS,
     ),
     Distribution(
