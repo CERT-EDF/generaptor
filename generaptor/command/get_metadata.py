@@ -1,9 +1,9 @@
 """get-metadata command"""
 
-from json import dumps
 from pathlib import Path
 
 from ..concept import Collection
+from ..helper.json import dump_json
 from ..helper.logging import get_logger
 
 _LOGGER = get_logger('command.get_metadata')
@@ -15,7 +15,7 @@ def _print_collection_metadata(filepath: Path):
     if not metadata:
         _LOGGER.error("failed to retrieve collection metadata")
         return
-    print(dumps({'filepath': str(filepath), 'metadata': metadata}))
+    print(dump_json({'filepath': str(filepath), 'metadata': metadata}))
 
 
 def _get_metadata_cmd(args):

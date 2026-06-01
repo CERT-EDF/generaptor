@@ -1,10 +1,10 @@
 """get-secret command"""
 
-from json import dumps
 from pathlib import Path
 
 from ..concept import Collection
 from ..helper.crypto import RSAPrivateKey, load_private_key
+from ..helper.json import dump_json
 from ..helper.logging import get_logger
 
 _LOGGER = get_logger('command.get_secret')
@@ -20,7 +20,7 @@ def _print_collection_secret(private_key: RSAPrivateKey, filepath: Path):
     except ValueError:
         _LOGGER.error("private key does not match collection archive")
         return
-    print(dumps({'filepath': str(filepath), 'secret': secret}))
+    print(dump_json({'filepath': str(filepath), 'secret': secret}))
 
 
 def _get_secret_cmd(args):

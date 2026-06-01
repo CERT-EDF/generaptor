@@ -14,7 +14,7 @@ from ..helper.logging import get_logger
 from .cache import Cache
 from .config import Config
 from .distribution import Distribution, OperatingSystem
-from .ruleset import RuleSet
+from .rule_set import RuleSet
 
 _LOGGER = get_logger('concept.collector')
 
@@ -24,7 +24,7 @@ def _globs_from_ruleset(rule_set: RuleSet):
     csv_writer = writer(
         imstr, delimiter=',', quotechar='"', quoting=QUOTE_MINIMAL
     )
-    for rule in rule_set.rules.values():
+    for rule in rule_set.values:
         csv_writer.writerow([rule.glob, rule.accessor])
     file_globs = imstr.getvalue()
     imstr.close()

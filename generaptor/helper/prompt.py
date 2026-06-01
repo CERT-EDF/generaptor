@@ -1,5 +1,8 @@
 """Prompt helpers"""
 
+from dataclasses import dataclass
+from typing import Any
+
 from .logging import get_logger
 
 _LOGGER = get_logger('helper.prompt')
@@ -28,11 +31,22 @@ def confirm(warning):
     return answer.lower() == 'yes'
 
 
-def multiselect(title, options):
+@dataclass(kw_only=True)
+class Option:
+    """Option"""
+
+    label: str
+    value: Any
+
+
+def multiselect(title: str, options: list[Option]):
     """Pick multiselection wrapper"""
     return [
-        option
-        for option, _ in _pick(
-            options, title, multiselect=True, min_selection_count=1
+        options[index].value
+        for _, index in _pick(
+            [option.label for option in options],
+            title,
+            multiselect=True,
+            min_selection_count=1,
         )
     ]

@@ -1,9 +1,9 @@
 """get-fingerprint command"""
 
-from json import dumps
 from pathlib import Path
 
 from ..concept import Collection
+from ..helper.json import dump_json
 from ..helper.logging import get_logger
 
 _LOGGER = get_logger('command.get_fingerprint')
@@ -15,7 +15,7 @@ def _print_collection_fingerprint(filepath: Path):
     if not fingerprint:
         _LOGGER.error("failed to retrieve collection fingerprint")
         return
-    print(dumps({'filepath': str(filepath), 'fingerprint': fingerprint}))
+    print(dump_json({'filepath': str(filepath), 'fingerprint': fingerprint}))
 
 
 def _get_fingerprint_cmd(args):
