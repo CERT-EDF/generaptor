@@ -20,10 +20,10 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "rich~=14.3",
+    "rich~=15.0",
     "jinja2~=3.1",
-    "pyzipper~=0.3",
-    "cryptography~=46.0",
+    "pyzipper~=0.4",
+    "cryptography~=48.0",
 ]
 
 
