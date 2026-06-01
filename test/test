@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -e
+# -----------------------------------------------------------------------------
+# environment
+# -----------------------------------------------------------------------------
+DIR=/tmp/generaptor
+CWD=$(pwd)
+export GENERAPTOR_PK_SECRET=test
+# -----------------------------------------------------------------------------
+# functions
+# -----------------------------------------------------------------------------
+function g {
+    generaptor \
+        --cache "${DIR}"/cache \
+        --config "${DIR}"/config \
+        "${@}"
+}
+# -----------------------------------------------------------------------------
+# generaptor update tests
+# -----------------------------------------------------------------------------
+if [ ! -d "${DIR}"/cache/program ]; then
+    g update
+fi
+g update --do-not-fetch
+mkdir "${DIR}"/config/linux
+# -----------------------------------------------------------------------------
+# generaptor get-rules tests
+# -----------------------------------------------------------------------------
+g get-rules linux | jq
+g get-rules darwin | jq
+g get-rules windows | jq
+g get-rules linux --profile default | jq
+g get-rules darwin --profile default | jq
+g get-rules windows --profile default | jq
+g get-rules linux --targets 'System/Info' 'Program/Git' | jq
+g get-rules darwin --targets 'System/Info' 'Program/Mail' | jq
+g get-rules windows --targets 'Logs' 'Prefetch' | jq
+# -----------------------------------------------------------------------------
+# generaptor get-targets tests
+# -----------------------------------------------------------------------------
+g get-targets linux | jq
+g get-targets darwin | jq
+g get-targets windows | jq
+# -----------------------------------------------------------------------------
+# generaptor get-profiles tests
+# -----------------------------------------------------------------------------
+g get-profiles linux | jq
+g get-profiles darwin | jq
+g get-profiles windows | jq
+# -----------------------------------------------------------------------------
+# generaptor new-rule tests
+# -----------------------------------------------------------------------------
+g new-rule etc_hosts sys_config /etc/hosts file |
+    tee "${DIR}"/config/linux/rules.jsonl |
+    jq
+# -----------------------------------------------------------------------------
+# generaptor new-target tests
+# -----------------------------------------------------------------------------
+g new-target etc_target $(jq -r .guid "${DIR}"/config/linux/rules.jsonl) |
+    tee "${DIR}"/config/linux/targets.jsonl |
+    jq
+# -----------------------------------------------------------------------------
+# generaptor new-profile tests
+# -----------------------------------------------------------------------------
+g new-profile etc $(jq -r .guid "${DIR}"/config/linux/targets.jsonl) |
+    tee "${DIR}"/config/linux/profiles.jsonl |
+    jq
+# -----------------------------------------------------------------------------
+# generaptor generate tests
+# -----------------------------------------------------------------------------
+rm -rf "${DIR}"/output/linux
+g generate -p -o "${DIR}"/output/linux --profile etc linux
+rm -rf "${DIR}"/output/darwin
+g generate -p -o "${DIR}"/output/darwin --profile default darwin -a arm64
+rm -rf "${DIR}"/output/window
+g generate -p -o "${DIR}"/output/windows --profile default windows -a 386-legacy
+# -----------------------------------------------------------------------------
+# linux amd64 collector test
+# -----------------------------------------------------------------------------
+cd "${DIR}"/output/linux
+chmod +x collector-*-linux-amd64
+sudo ./collector-*-linux-amd64
+sudo chmod 666 ./Collection*
+cd "${CWD}"
+# -----------------------------------------------------------------------------
+# generaptor get-fingerprint
+# -----------------------------------------------------------------------------
+g get-fingerprint "${DIR}"/output/linux/Collection* | jq
+# -----------------------------------------------------------------------------
+# generaptor get-metadata
+# -----------------------------------------------------------------------------
+g get-metadata "${DIR}"/output/linux/Collection* | jq
+# -----------------------------------------------------------------------------
+# generaptor get-secret
+# -----------------------------------------------------------------------------
+g get-secret "${DIR}"/output/linux/*.key.pem \
+             "${DIR}"/output/linux/Collection* | jq
+# -----------------------------------------------------------------------------
+# generaptor extract
+# -----------------------------------------------------------------------------
+g extract -o "${DIR}"/output/linux/extracted \
+          "${DIR}"/output/linux/*.key.pem \
+          "${DIR}"/output/linux/Collection* | jq

@@ -46,9 +46,9 @@ generaptor generate -o /tmp/generaptor windows
 # Perform collection on target
 # Then retrieve collection archive and extract
 generaptor extract \
-           --output-directory /tmp/collection \
+           -o /tmp/collection \
            /tmp/generaptor/*.key.pem \
-           Collection_COMPUTER_DEVICE_YYYY-mm-ddTHH-MM-SS.zip
+           Collection_*.zip
 # Check integrated help for more options
 generaptor -h
 generaptor generate -h
@@ -73,17 +73,18 @@ After starting generaptor for the first time, you can use the following commands
 # Add variables for directories in current environment
 export CACHE="${HOME}/.cache/generaptor"
 export CONFIG="${HOME}/.config/generaptor"
-# Copy header for each file
-head -n 1 "${CACHE}/config/linux/rules.csv" > "${CONFIG}/linux/rules.csv"
-head -n 1 "${CACHE}/config/linux/targets.csv" > "${CONFIG}/linux/targets.csv"
-head -n 1 "${CACHE}/config/windows/rules.csv" > "${CONFIG}/windows/rules.csv"
-head -n 1 "${CACHE}/config/windows/targets.csv" > "${CONFIG}/windows/targets.csv"
-head -n 1 "${CACHE}/config/darwin/rules.csv" > "${CONFIG}/darwin/rules.csv"
-head -n 1 "${CACHE}/config/darwin/targets.csv" > "${CONFIG}/darwin/targets.csv"
-# Copy VQL templates
+# Create custom files and add some lines
+generaptor new-rule etc_hosts sys_config /etc/hosts file |
+    tee "${CONFIG}"/linux/rules.jsonl |
+    jq
+generaptor new-target sys_config $(jq -r .guid "${CONFIG}"/linux/rules.jsonl) |
+    tee "${CONFIG}"/linux/targets.jsonl |
+    jq
+generaptor new-profile sys_config $(jq -r .guid "${CONFIG}"/linux/targets.jsonl) |
+    tee "${CONFIG}"/linux/profiles.jsonl |
+    jq
+# Copy VQL templates then edit as needed
 cp "${CACHE}/config/linux/collector.yml.jinja" "${CONFIG}/linux/"
-cp "${CACHE}/config/windows/collector.yml.jinja" "${CONFIG}/windows/"
-cp "${CACHE}/config/darwin/collector.yml.jinja" "${CONFIG}/darwin/"
 ```
 
 <br>

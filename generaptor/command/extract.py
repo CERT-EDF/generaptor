@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ..concept import Collection, CollectionList, Outcome
 from ..helper.crypto import RSAPrivateKey, load_private_key
+from ..helper.json import dump_json
 from ..helper.logging import get_logger
 
 _LOGGER = get_logger('command.extract')
@@ -67,6 +68,7 @@ def _extract_cmd(args):
         return
     for collection in collections:
         _extract_collection(collection, private_key, args.output_directory)
+    print(dump_json({'directory': str(args.output_directory)}))
 
 
 def setup_cmd(cmd):

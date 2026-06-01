@@ -6,7 +6,7 @@ from ...concept import (
     CollectorConfig,
     Distribution,
     OperatingSystem,
-    get_ruleset_from_targets,
+    get_rule_set_from_targets,
 )
 from ...helper.crypto import provide_x509_certificate
 from ...helper.logging import get_logger
@@ -30,8 +30,8 @@ def _generate_linux_cmd(args):
         _LOGGER.error("cannot find profile: %s", args.profile)
         return
     try:
-        rule_set = get_ruleset_from_targets(
-            args.cache, args.config, targets, distribution.opsystem
+        rule_set = get_rule_set_from_targets(
+            args.cache, args.config, distribution.opsystem, targets
         )
         if rule_set.empty:
             _LOGGER.warning("empty rule set, operation canceled.")
