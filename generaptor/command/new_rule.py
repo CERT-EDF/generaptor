@@ -20,9 +20,7 @@ def _new_rule_cmd(args):
 
 def setup_cmd(cmd):
     """Setup new-rule command"""
-    new_rule = cmd.add_parser(
-        'new-rule', help="generate a new rule"
-    )
+    new_rule = cmd.add_parser('new-rule', help="generate a new rule")
     new_rule.add_argument('name', help="rule name")
     new_rule.add_argument('category', help="rule category")
     new_rule.add_argument('glob', help="rule glob pattern")

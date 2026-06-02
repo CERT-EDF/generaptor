@@ -81,7 +81,7 @@ def get_rule_set_from_targets(
     cache: Cache,
     config: Config,
     opsystem: OperatingSystem,
-    targets: list[str|UUID],
+    targets: list[str | UUID],
 ) -> RuleSet | None:
     """Load ruleset for given targets and operating system"""
     rule_set = get_rule_set(cache, config, opsystem)

@@ -14,9 +14,7 @@ def _new_target_cmd(args):
 
 def setup_cmd(cmd):
     """Setup new-target command"""
-    new_target = cmd.add_parser(
-        'new-target', help="generate a new target"
-    )
+    new_target = cmd.add_parser('new-target', help="generate a new target")
     new_target.add_argument('name', help="target name")
     new_target.add_argument(
         'rules', nargs='+', metavar='rule', help="target rules"

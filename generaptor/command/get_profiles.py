@@ -17,7 +17,6 @@ def _get_profiles_cmd(args):
         print(dump_json(profile.to_dict()))
 
 
-
 def setup_cmd(cmd):
     """Setup get-profiles command"""
     get_profiles = cmd.add_parser(
