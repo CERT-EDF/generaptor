@@ -33,7 +33,6 @@ def _get_rules_cmd(args):
         print(dump_json(rule.to_dict()))
 
 
-
 def setup_cmd(cmd):
     """Setup get-rules command"""
     get_rules = cmd.add_parser(

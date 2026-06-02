@@ -17,7 +17,6 @@ def _get_targets_cmd(args):
         print(dump_json(target.to_dict()))
 
 
-
 def setup_cmd(cmd):
     """Setup get-targets command"""
     get_targets = cmd.add_parser(

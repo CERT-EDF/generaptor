@@ -103,7 +103,7 @@ class TargetSet:
         self.by_guid.update(target_set.by_guid)
         return True
 
-    def select(self, rule_set: RuleSet, targets: list[str|UUID]) -> RuleSet:
+    def select(self, rule_set: RuleSet, targets: list[str | UUID]) -> RuleSet:
         """Build a rule set from an existing ruleset and selected targets"""
         if not targets:
             targets = multiselect(

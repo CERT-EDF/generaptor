@@ -54,9 +54,7 @@ class Config:
         )
         return target_set
 
-    def load_profile_set(
-        self, opsystem: OperatingSystem
-    ) -> ProfileSet | None:
+    def load_profile_set(self, opsystem: OperatingSystem) -> ProfileSet | None:
         """Load profiles from operating system directory"""
         filepath = self.directory / opsystem.value / 'profiles.jsonl'
         if not filepath.is_file():
