@@ -6,7 +6,7 @@ from ..helper.http import http_download, http_set_proxies
 from ..helper.logging import get_logger
 
 _LOGGER = get_logger('command.update')
-_FETCH_TAG_DEFAULT = 'v0.76'
+_FETCH_TAG_DEFAULT = 'v0.77'
 
 
 def _update_cmd(args):
