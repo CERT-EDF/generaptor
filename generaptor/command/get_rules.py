@@ -17,6 +17,9 @@ def _get_rules_cmd(args):
     if args.profile:
         profile_set = get_profile_set(args.cache, args.config, opsystem)
         profile = profile_set.by_name.get(args.profile)
+        if not profile:
+            _LOGGER.error("cannot find profile: %s", args.profile)
+            return
         rule_set = get_rule_set_from_targets(
             args.cache, args.config, opsystem, profile.targets
         )

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Application"""
 
+from sys import exit as sys_exit
 from argparse import ArgumentParser
 
 from .__version__ import version
@@ -42,7 +43,7 @@ def app():
         _LOGGER.error(
             "cache update is needed, please run 'update' command first"
         )
-        return
+        sys_exit(1)
     args.func(args)
 
 

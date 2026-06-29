@@ -109,8 +109,8 @@ class TargetSet:
             targets = multiselect(
                 "Pick one or more collection targets",
                 [
-                    Option(label=target.name, value=target)
-                    for name, target in self.by_name.items()
+                    Option(label=target.name, value=target.name)
+                    for target in self.by_name.values()
                 ],
             )
         by_guid = {}
@@ -120,9 +120,11 @@ class TargetSet:
             if not target:
                 _LOGGER.warning("skipped unknown target: %s", key)
                 continue
-            by_guid.update(
-                {guid: rule_set.by_guid[guid] for guid in target.rules}
-            )
+            for guid in target.rules:
+                if guid not in rule_set.by_guid:
+                    _LOGGER.warning("skipped missing rule: %s", guid)
+                    continue
+                by_guid[guid] = rule_set.by_guid[guid]
             _LOGGER.info(
                 "select %s (%d rules)", target.name, len(target.rules)
             )
