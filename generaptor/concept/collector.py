@@ -6,7 +6,7 @@ from datetime import datetime
 from io import StringIO
 from pathlib import Path
 from platform import system
-from subprocess import run
+from subprocess import CalledProcessError, run
 
 from ..__version__ import version
 from ..helper.crypto import Certificate, fingerprint, pem_string
@@ -122,6 +122,11 @@ class Collector:
             str(output_binary),
         ]
         _LOGGER.info("spawning subprocess: %s", argv)
-        run(argv, check=True)
+        try:
+            run(argv, check=True)
+        except CalledProcessError as exc:
+            _LOGGER.critical("repack failed (exit %d)", exc.returncode)
+            output_config.unlink(missing_ok=True)
+            return None
         _LOGGER.info("release binary written to: %s", output_binary)
         return output_binary, output_config
