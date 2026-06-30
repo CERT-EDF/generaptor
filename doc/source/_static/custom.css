@@ -1,0 +1,97 @@
+/* Custom CSS for Generaptor documentation */
+
+/* Fix code block overflow */
+.highlight {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+/* Better table styling */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+th, td {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background-color: #f8f9fa;
+}
+
+/* Better code inline styling */
+code.literal {
+    background-color: #f0f0f0;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.2rem;
+    font-size: 0.9em;
+}
+
+/* Fix navigation font size */
+.wy-nav-content {
+    font-size: 14px;
+}
+
+/* Better heading colors */
+h1, h2, h3, h4 {
+    color: #2c3e50;
+}
+
+/* Better link colors in code */
+.viewcode-back a {
+    color: #2980b9;
+}
+
+/* Better datamodel rendering */
+.datamodel {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Better class/function signature */
+dl.class, dl.function {
+    background-color: #f8f9fa;
+    padding: 0.5rem 1rem;
+    border-radius: 0.3rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Better parameter documentation */
+dt.idp8, dd.pd {
+    margin-left: 1rem;
+}
+
+/* Fix long lines in docstrings */
+.rst-content .section {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Better code block background */
+.highlight .hll {
+    background-color: #ffffcc;
+}
+
+/* Better side navigation */
+.wy-nav-side {
+    background-color: #2980b9;
+}
+
+.wy-nav-side a {
+    color: #ffffff;
+}
+
+.wy-nav-side a:hover {
+    background-color: #1a5276;
+}
+
+/* Better main content area */
+.wy-nav-content-wrap {
+    background-color: #ffffff;
+}

@@ -1,4 +1,4 @@
-"""refresh command module.
+"""update command module.
 
 This module provides the CLI command for updating the cache and fetching
 Velociraptor binaries from GitHub releases.
