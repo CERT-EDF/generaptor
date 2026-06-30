@@ -28,6 +28,11 @@ dependencies = [
 
 
 [project.optional-dependencies]
+doc = [
+    "sphinx~=9.1",
+    "sphinx-rtd-theme~=3.1",
+    "myst-parser~=5.1",
+]
 pick = ["pick~=2.6"]
 
 
@@ -57,6 +62,7 @@ version_file = "generaptor/__version__.py"
 
 [tool.black]
 line-length = 79
+target-version = ["py312"]
 skip-string-normalization = true
 
 

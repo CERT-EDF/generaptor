@@ -1,0 +1,24 @@
+# Sphinx documentation build artifacts
+build/
+*.doctree
+
+# Environment
+.env
+.venv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS
+.DS_Store
+Thumbs.db
