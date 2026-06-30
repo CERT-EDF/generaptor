@@ -1,4 +1,8 @@
-"""Generaptor Logging Helper"""
+"""Generaptor Logging Helper module.
+
+This module configures and provides logging utilities for the generaptor application,
+using Rich console formatting for enhanced log output.
+"""
 
 from logging import basicConfig, getLogger
 from os import getenv
@@ -8,7 +12,7 @@ from rich.logging import RichHandler
 
 DEBUG = int(getenv('GENERAPTOR_DEBUG', '0'))
 
-"""Setup logging facility"""
+# Setup logging facility
 basicConfig(
     level='DEBUG' if DEBUG else 'INFO',
     format="(%(name)s): %(message)s",
@@ -18,5 +22,13 @@ basicConfig(
 
 
 def get_logger(name: str, root: str = 'generaptor'):
-    """Retrieve logger for given name"""
+    """Retrieve logger for given name.
+
+    Args:
+        name (str): Logger name (will be prefixed with root).
+        root (str): Root logger name prefix. Defaults to 'generaptor'.
+
+    Returns:
+        logging.Logger: Configured logger instance.
+    """
     return getLogger('.'.join([root, name]))

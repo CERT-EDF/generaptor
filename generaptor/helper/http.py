@@ -1,4 +1,7 @@
-"""HTTP helpers"""
+"""HTTP helpers module.
+
+This module provides HTTP utility functions for downloading and fetching resources.
+"""
 
 from json import JSONDecodeError, load
 from pathlib import Path
@@ -13,13 +16,22 @@ _LOGGER = get_logger('helper.http')
 
 
 def http_set_proxies(proxies):
-    """Configure proxies"""
+    """Configure proxies.
+
+    Args:
+        proxies (dict): Dictionary of proxy URL mappings.
+    """
     _LOGGER.info("using proxies %s", proxies)
     install_opener(build_opener(ProxyHandler(proxies)))
 
 
 def http_download(url: str, filepath: Path):
-    """Download a resource and store it inside a file"""
+    """Download a resource and store it inside a file.
+
+    Args:
+        url (str): URL to download from.
+        filepath (Path): Local path to save the downloaded content.
+    """
     _LOGGER.info("downloading from %s", url)
     with urlopen(url) as response:
         size = int(response.headers['Content-Length'])
@@ -31,7 +43,14 @@ def http_download(url: str, filepath: Path):
 
 
 def http_get_json(url: str):
-    """GET a JSON resource"""
+    """GET a JSON resource.
+
+    Args:
+        url (str): URL to fetch JSON from.
+
+    Returns:
+        dict | None: Parsed JSON data, or None if request failed or invalid JSON.
+    """
     _LOGGER.info("requesting %s", url)
     with urlopen(url) as response:
         if response.status != 200:

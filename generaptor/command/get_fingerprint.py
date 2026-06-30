@@ -1,4 +1,8 @@
-"""get-fingerprint command"""
+"""get-fingerprint command module.
+
+This module provides the CLI command for retrieving certificate fingerprints
+from collection archives.
+"""
 
 from pathlib import Path
 
@@ -10,6 +14,11 @@ _LOGGER = get_logger('command.get_fingerprint')
 
 
 def _print_collection_fingerprint(filepath: Path):
+    """Print collection fingerprint as JSON.
+
+    Args:
+        filepath (Path): Path to the collection archive file.
+    """
     collection = Collection(filepath=filepath)
     fingerprint = collection.fingerprint
     if not fingerprint:
@@ -19,6 +28,11 @@ def _print_collection_fingerprint(filepath: Path):
 
 
 def _get_fingerprint_cmd(args):
+    """Handle get-fingerprint command execution.
+
+    Args:
+        args: Parsed command line arguments with collections paths.
+    """
     for filepath in args.collections:
         if filepath.is_file():
             _print_collection_fingerprint(filepath)
@@ -31,7 +45,11 @@ def _get_fingerprint_cmd(args):
 
 
 def setup_cmd(cmd):
-    """Setup get-fingerprint command"""
+    """Setup get-fingerprint command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     get_fingerprint = cmd.add_parser(
         'get-fingerprint',
         help="get the collection archive certificate fingerprint",

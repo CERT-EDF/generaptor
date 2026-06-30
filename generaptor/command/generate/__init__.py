@@ -1,4 +1,8 @@
-"""generate command"""
+"""generate command module.
+
+This module provides the CLI command for generating Velociraptor collectors,
+with platform-specific subcommands for Windows, Linux, and macOS.
+"""
 
 from pathlib import Path
 
@@ -9,7 +13,11 @@ from .windows import setup_target as setup_windows
 
 
 def setup_cmd(cmd):
-    """Setup generate command"""
+    """Setup generate command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     generate = cmd.add_parser('generate', help="generate a collector")
     if INTERACTIVE_PROMPT_AVAILABLE:
         generate.add_argument(

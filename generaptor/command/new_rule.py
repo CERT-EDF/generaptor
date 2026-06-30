@@ -1,4 +1,7 @@
-"""new-rule command"""
+"""new-rule command module.
+
+This module provides the CLI command for creating new rules.
+"""
 
 from ..concept import Rule
 from ..helper.json import dump_json
@@ -8,6 +11,11 @@ _LOGGER = get_logger('command.new_rule')
 
 
 def _new_rule_cmd(args):
+    """Handle new-rule command execution.
+
+    Args:
+        args: Parsed command line arguments with rule attributes.
+    """
     rule = Rule(
         name=args.name,
         category=args.category,
@@ -19,7 +27,11 @@ def _new_rule_cmd(args):
 
 
 def setup_cmd(cmd):
-    """Setup new-rule command"""
+    """Setup new-rule command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     new_rule = cmd.add_parser('new-rule', help="generate a new rule")
     new_rule.add_argument('name', help="rule name")
     new_rule.add_argument('category', help="rule category")

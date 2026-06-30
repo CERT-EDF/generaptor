@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Application"""
+"""Application entry point module.
 
-from sys import exit as sys_exit
+This module provides the main application entry point and argument parsing
+for the generaptor CLI tool.
+"""
+
 from argparse import ArgumentParser
+from sys import exit as sys_exit
 
 from .__version__ import version
 from .command import setup_commands
@@ -13,6 +17,11 @@ _LOGGER = get_logger('main')
 
 
 def _parse_args():
+    """Parse command line arguments.
+
+    Returns:
+        argparse.Namespace: Parsed arguments including command and options.
+    """
     parser = ArgumentParser(
         description="Generate Velociraptor-based collectors in no time"
     )
@@ -35,7 +44,11 @@ def _parse_args():
 
 
 def app():
-    """Application entry point"""
+    """Application entry point.
+
+    Main function that initializes the application, checks cache and config
+    directories, and executes the selected command.
+    """
     _LOGGER.info("Generaptor v%s", version)
     args = _parse_args()
     args.config.directory.mkdir(parents=True, exist_ok=True)

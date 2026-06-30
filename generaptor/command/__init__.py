@@ -1,4 +1,8 @@
-"""Command module"""
+"""Command module.
+
+This module provides all CLI command implementations for generaptor.
+Each submodule contains a specific command and its setup function.
+"""
 
 from .extract import setup_cmd as setup_extract
 from .generate import setup_cmd as setup_generate
@@ -15,7 +19,11 @@ from .update import setup_cmd as setup_update
 
 
 def setup_commands(cmd):
-    """Setup commands"""
+    """Setup all available commands.
+
+    Args:
+        cmd: argparse subparsers object to which commands will be added.
+    """
     setup_update(cmd)
     setup_get_rules(cmd)
     setup_get_targets(cmd)

@@ -1,4 +1,8 @@
-"""get-targets command"""
+"""get-targets command module.
+
+This module provides the CLI command for listing available targets
+for a specific operating system.
+"""
 
 from ..concept import OperatingSystem, get_target_set
 from ..helper.json import dump_json
@@ -8,6 +12,11 @@ _LOGGER = get_logger('command.get_targets')
 
 
 def _get_targets_cmd(args):
+    """Handle get-targets command execution.
+
+    Args:
+        args: Parsed command line arguments with opsystem attribute.
+    """
     opsystem = OperatingSystem(args.opsystem)
     target_set = get_target_set(args.cache, args.config, opsystem)
     if target_set.empty:
@@ -18,7 +27,11 @@ def _get_targets_cmd(args):
 
 
 def setup_cmd(cmd):
-    """Setup get-targets command"""
+    """Setup get-targets command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     get_targets = cmd.add_parser(
         'get-targets',
         help="get targets matching operating system",

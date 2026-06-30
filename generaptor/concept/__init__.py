@@ -1,4 +1,8 @@
-"""Generaptor Concepts"""
+"""Generaptor Concepts module.
+
+This module contains all the core data structures and business logic for generaptor,
+including cache, config, distributions, profiles, rules, targets, and collections.
+"""
 
 from uuid import UUID
 
@@ -30,7 +34,19 @@ def get_profile_set(
     config: Config,
     opsystem: OperatingSystem,
 ) -> ProfileSet | None:
-    """Load profile mapping for given operating system"""
+    """Load profile mapping for given operating system.
+
+    Loads the standard profile set from cache and merges any custom profiles
+    from the user configuration.
+
+    Args:
+        cache (Cache): The cache instance to load standard profiles from.
+        config (Config): The config instance to load custom profiles from.
+        opsystem (OperatingSystem): The target operating system.
+
+    Returns:
+        ProfileSet | None: The merged profile set, or None if not found.
+    """
     # load standard profile mapping
     profile_set = cache.config.load_profile_set(opsystem)
     # load and merge custom profile mapping
@@ -46,7 +62,19 @@ def get_rule_set(
     config: Config,
     opsystem: OperatingSystem,
 ) -> RuleSet | None:
-    """Load rule set for given operating system"""
+    """Load rule set for given operating system.
+
+    Loads the standard rule set from cache and merges any custom rules
+    from the user configuration.
+
+    Args:
+        cache (Cache): The cache instance to load standard rules from.
+        config (Config): The config instance to load custom rules from.
+        opsystem (OperatingSystem): The target operating system.
+
+    Returns:
+        RuleSet | None: The merged rule set, or None if not found.
+    """
     # load standard rule set
     rule_set = cache.config.load_rule_set(opsystem)
     if not rule_set:
@@ -64,7 +92,19 @@ def get_target_set(
     config: Config,
     opsystem: OperatingSystem,
 ) -> TargetSet | None:
-    """Load target set for given operating system"""
+    """Load target set for given operating system.
+
+    Loads the standard target set from cache and merges any custom targets
+    from the user configuration.
+
+    Args:
+        cache (Cache): The cache instance to load standard targets from.
+        config (Config): The config instance to load custom targets from.
+        opsystem (OperatingSystem): The target operating system.
+
+    Returns:
+        TargetSet | None: The merged target set, or None if not found.
+    """
     # load standard target set
     target_set = cache.config.load_target_set(opsystem)
     if not target_set:
@@ -83,7 +123,20 @@ def get_rule_set_from_targets(
     opsystem: OperatingSystem,
     targets: list[str | UUID],
 ) -> RuleSet | None:
-    """Load ruleset for given targets and operating system"""
+    """Load ruleset for given targets and operating system.
+
+    Loads the rule set for a specific operating system and filters it
+    based on the specified targets.
+
+    Args:
+        cache (Cache): The cache instance.
+        config (Config): The config instance.
+        opsystem (OperatingSystem): The target operating system.
+        targets (list[str | UUID]): List of target names or GUIDs to include.
+
+    Returns:
+        RuleSet | None: The filtered rule set, or None if inputs are invalid.
+    """
     rule_set = get_rule_set(cache, config, opsystem)
     if not rule_set:
         return None
