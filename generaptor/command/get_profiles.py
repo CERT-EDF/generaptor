@@ -1,4 +1,8 @@
-"""get-profiles command"""
+"""get-profiles command module.
+
+This module provides the CLI command for listing available profiles
+for a specific operating system.
+"""
 
 from ..concept import OperatingSystem, get_profile_set
 from ..helper.json import dump_json
@@ -8,6 +12,11 @@ _LOGGER = get_logger('command.get_profiles')
 
 
 def _get_profiles_cmd(args):
+    """Handle get-profiles command execution.
+
+    Args:
+        args: Parsed command line arguments with opsystem attribute.
+    """
     opsystem = OperatingSystem(args.opsystem)
     profile_set = get_profile_set(args.cache, args.config, opsystem)
     if profile_set.empty:
@@ -18,7 +27,11 @@ def _get_profiles_cmd(args):
 
 
 def setup_cmd(cmd):
-    """Setup get-profiles command"""
+    """Setup get-profiles command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     get_profiles = cmd.add_parser(
         'get-profiles',
         help="get profiles matching operating system",

@@ -1,4 +1,7 @@
-"""Generate windows target"""
+"""Generate windows target module.
+
+This module provides the Windows-specific collector generation command.
+"""
 
 from ...concept import (
     Architecture,
@@ -17,6 +20,11 @@ _LOGGER = get_logger('command.generate.windows')
 
 
 def _generate_windows_cmd(args):
+    """Handle Windows collector generation command.
+
+    Args:
+        args: Parsed command line arguments for Windows collector generation.
+    """
     _LOGGER.info("starting windows collector generator...")
     if not check_device(args.device):
         return
@@ -63,7 +71,11 @@ def _generate_windows_cmd(args):
 
 
 def setup_target(target):
-    """Setup windows target"""
+    """Setup windows target.
+
+    Args:
+        target: argparse subparsers object to add the Windows target command to.
+    """
     windows = target.add_parser('windows', help="Generate windows collector")
     windows.set_defaults(func=_generate_windows_cmd)
     windows.add_argument(

@@ -1,4 +1,7 @@
-"""Generate darwin target"""
+"""Generate darwin target module.
+
+This module provides the macOS/Darwin-specific collector generation command.
+"""
 
 from ...concept import (
     Architecture,
@@ -17,6 +20,11 @@ _LOGGER = get_logger('command.generate.darwin')
 
 
 def _generate_darwin_cmd(args):
+    """Handle macOS/Darwin collector generation command.
+
+    Args:
+        args: Parsed command line arguments for macOS/Darwin collector generation.
+    """
     _LOGGER.info("starting darwin collector generator...")
     if not check_device(args.device):
         return
@@ -56,7 +64,11 @@ def _generate_darwin_cmd(args):
 
 
 def setup_target(target):
-    """Setup darwin target"""
+    """Setup darwin target.
+
+    Args:
+        target: argparse subparsers object to add the macOS/Darwin target command to.
+    """
     darwin = target.add_parser('darwin', help="generate darwin collector")
     darwin.set_defaults(func=_generate_darwin_cmd)
     darwin.add_argument(

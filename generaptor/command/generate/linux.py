@@ -1,4 +1,7 @@
-"""Generate linux target"""
+"""Generate linux target module.
+
+This module provides the Linux-specific collector generation command.
+"""
 
 from ...concept import (
     Architecture,
@@ -17,6 +20,11 @@ _LOGGER = get_logger('command.generate.linux')
 
 
 def _generate_linux_cmd(args):
+    """Handle Linux collector generation command.
+
+    Args:
+        args: Parsed command line arguments for Linux collector generation.
+    """
     _LOGGER.info("starting linux collector generator...")
     if not check_device(args.device):
         return
@@ -56,7 +64,11 @@ def _generate_linux_cmd(args):
 
 
 def setup_target(target):
-    """Setup linux target"""
+    """Setup linux target.
+
+    Args:
+        target: argparse subparsers object to add the Linux target command to.
+    """
     linux = target.add_parser('linux', help="generate linux collector")
     linux.set_defaults(func=_generate_linux_cmd)
     linux.add_argument(

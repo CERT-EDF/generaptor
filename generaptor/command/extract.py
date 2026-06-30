@@ -1,4 +1,8 @@
-"""extract command"""
+"""extract command module.
+
+This module provides the CLI command for extracting collection archives
+using private keys for decryption.
+"""
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -12,6 +16,15 @@ _LOGGER = get_logger('command.extract')
 
 
 def _check_same_fingerprint(collections: CollectionList, private_key: Path):
+    """Check that all collections share the same certificate fingerprint.
+
+    Args:
+        collections (CollectionList): List of collection archives to check.
+        private_key (Path): Path to the private key file (used for fingerprint matching).
+
+    Returns:
+        bool: True if all collections share the same fingerprint and match the key, False otherwise.
+    """
     fingerprints = {collection.fingerprint for collection in collections}
     if len(fingerprints) != 1:
         _LOGGER.error("collections shall share the same fingerprint")
@@ -26,6 +39,14 @@ def _check_same_fingerprint(collections: CollectionList, private_key: Path):
 
 
 def _enumerate_collections(args) -> Iterator[Collection]:
+    """Enumerate collection archives from command arguments.
+
+    Args:
+        args: Parsed command line arguments with collections paths.
+
+    Yields:
+        Collection: Collection objects for each found archive file.
+    """
     for filepath in args.collections:
         if filepath.is_file():
             yield Collection(filepath=filepath)
@@ -40,6 +61,13 @@ def _enumerate_collections(args) -> Iterator[Collection]:
 def _extract_collection(
     collection: Collection, private_key: RSAPrivateKey, output_directory: Path
 ):
+    """Extract a single collection archive.
+
+    Args:
+        collection (Collection): Collection archive to extract.
+        private_key (RSAPrivateKey): Private key for decryption.
+        output_directory (Path): Base directory for extracted content.
+    """
     try:
         secret = collection.secret(private_key)
     except ValueError:
@@ -56,6 +84,11 @@ def _extract_collection(
 
 
 def _extract_cmd(args):
+    """Handle extract command execution.
+
+    Args:
+        args: Parsed command line arguments with private_key, collections, and output_directory.
+    """
     collections = list(_enumerate_collections(args))
     if not _check_same_fingerprint(collections, args.private_key):
         return
@@ -72,7 +105,11 @@ def _extract_cmd(args):
 
 
 def setup_cmd(cmd):
-    """Setup get-fingerprint command"""
+    """Setup extract command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     extract = cmd.add_parser(
         'extract',
         help="extract collection archives",

@@ -1,4 +1,8 @@
-"""Generaptor Collector"""
+"""Generaptor Collector module.
+
+This module provides functionality for generating Velociraptor collectors,
+including collector configuration and binary generation.
+"""
 
 from csv import QUOTE_MINIMAL, writer
 from dataclasses import dataclass
@@ -20,6 +24,14 @@ _LOGGER = get_logger('concept.collector')
 
 
 def _globs_from_ruleset(rule_set: RuleSet):
+    """Generate CSV glob patterns from rule set.
+
+    Args:
+        rule_set (RuleSet): The rule set to generate glob patterns from.
+
+    Returns:
+        str: CSV-formatted string containing glob and accessor pairs.
+    """
     imstr = StringIO()
     csv_writer = writer(
         imstr, delimiter=',', quotechar='"', quoting=QUOTE_MINIMAL
@@ -33,7 +45,20 @@ def _globs_from_ruleset(rule_set: RuleSet):
 
 @dataclass
 class CollectorConfig:
-    """Collector configuration"""
+    """Collector configuration.
+
+    Configuration for generating a Velociraptor collector.
+
+    Attributes:
+        device (str): Device name/identifier for the collector.
+        rule_set (RuleSet): Set of rules to include in the collector.
+        certificate (Certificate): TLS certificate for the collector.
+        distribution (Distribution): Target distribution (OS + architecture).
+        memdump (bool): Whether to enable memory dumping (Windows only).
+        dont_be_lazy (bool | None): Whether to disable lazy collection (Windows only).
+        vss_analysis_age (int | None): VSS analysis age in days (Windows only).
+        use_auto_accessor (bool | None): Whether to use automatic accessor (Windows only).
+    """
 
     device: str
     rule_set: RuleSet
@@ -46,7 +71,12 @@ class CollectorConfig:
 
     @property
     def context(self):
-        """Context for jinja template engine"""
+        """Context for jinja template engine.
+
+        Returns:
+            dict: Context dictionary used for template rendering,
+                 including version, device, certificate data, and file globs.
+        """
         ctx = {
             'version': version,
             'device': self.device,
@@ -68,7 +98,13 @@ class CollectorConfig:
         return ctx
 
     def generate(self, cache: Cache, config: Config, filepath: Path):
-        """Generate configuration file data"""
+        """Generate configuration file data.
+
+        Args:
+            cache (Cache): Cache instance for standard template fallback.
+            config (Config): Config instance for custom template lookup.
+            filepath (Path): Output path for the generated configuration file.
+        """
         vql_template = config.vql_template(self.distribution.opsystem)
         if vql_template is None:
             vql_template = cache.config.vql_template(
@@ -83,14 +119,30 @@ class CollectorConfig:
 
 @dataclass
 class Collector:
-    """Collector"""
+    """Collector.
+
+    Represents a Velociraptor collector with its configuration.
+
+    Attributes:
+        config (CollectorConfig): Configuration for this collector.
+    """
 
     config: CollectorConfig
 
     def generate(
         self, cache: Cache, config: Config, directory: Path
     ) -> tuple[Path, Path] | None:
-        """Generate a configuration file and a pre-configured binary"""
+        """Generate a configuration file and a pre-configured binary.
+
+        Args:
+            cache (Cache): Cache instance for binary and template access.
+            config (Config): Config instance for custom template lookup.
+            directory (Path): Output directory for generated files.
+
+        Returns:
+            tuple[Path, Path] | None: Tuple of (binary_path, config_path) if successful,
+                                 None if generation failed.
+        """
         platform_binary = cache.platform_binary()
         if not platform_binary:
             _LOGGER.critical("unsupported platform!")

@@ -1,4 +1,11 @@
-"""Cryptography helper"""
+"""Cryptography helper module.
+
+This module provides cryptographic utilities for generaptor, including:
+- Certificate and key generation
+- Encryption and decryption
+- Checksum computation
+- PEM format conversion
+"""
 
 from base64 import b64decode
 from datetime import datetime, timedelta, timezone
@@ -41,7 +48,16 @@ RSA_PUBLIC_EXPONENT = 65537
 
 
 def checksum(filepath: Path) -> str:
-    """Compute the checksum"""
+    """Compute the checksum.
+
+    Computes SHA-256 hash of a file's contents.
+
+    Args:
+        filepath (Path): Path to the file to hash.
+
+    Returns:
+        str: Hexadecimal SHA-256 checksum of the file.
+    """
     digest = Hash(SHA256())
     with filepath.open('rb') as fstream:
         while chunk := fstream.read(CHUNK_SIZE):
@@ -50,12 +66,26 @@ def checksum(filepath: Path) -> str:
 
 
 def fingerprint(certificate: Certificate):
-    """Certificate SHA256 fingerprint"""
+    """Certificate SHA256 fingerprint.
+
+    Args:
+        certificate (Certificate): X.509 certificate to fingerprint.
+
+    Returns:
+        str: Hexadecimal SHA-256 fingerprint of the certificate.
+    """
     return certificate.fingerprint(SHA256()).hex()
 
 
 def pem_string(certificate: Certificate):
-    """Certificate as a PEM string"""
+    """Certificate as a PEM string.
+
+    Args:
+        certificate (Certificate): X.509 certificate to convert.
+
+    Returns:
+        str: PEM-encoded certificate string with escaped newlines.
+    """
     crt_pem_bytes = certificate.public_bytes(Encoding.PEM)
     crt_pem_string = crt_pem_bytes.decode()
     crt_pem_string = crt_pem_string.replace('\n', '\\n')
@@ -68,7 +98,19 @@ def generate_private_key_and_certificate(
     key_size: int = RSA_KEY_SIZE,
     public_exponent: int = RSA_PUBLIC_EXPONENT,
 ) -> tuple[RSAPrivateKey, Certificate]:
-    """Generate (private_key, certificate)"""
+    """Generate (private_key, certificate).
+
+    Generates a self-signed X.509 certificate and RSA private key.
+
+    Args:
+        validity (timedelta): Validity period for the certificate.
+        common_name (str): Common Name (CN) for the certificate subject.
+        key_size (int): RSA key size in bits.
+        public_exponent (int): RSA public exponent.
+
+    Returns:
+        tuple[RSAPrivateKey, Certificate]: Generated private key and certificate.
+    """
     _LOGGER.info("generating private key... please wait...")
     private_key = generate_private_key(
         public_exponent=public_exponent,
@@ -113,7 +155,15 @@ def generate_private_key_and_certificate(
 def private_key_to_pem_bytes(
     private_key: RSAPrivateKey, private_key_secret: bytes
 ) -> bytes:
-    """RSA private key to PEM bytes"""
+    """RSA private key to PEM bytes.
+
+    Args:
+        private_key (RSAPrivateKey): RSA private key to convert.
+        private_key_secret (bytes): Password for encrypting the private key.
+
+    Returns:
+        bytes: Encrypted PEM-encoded private key bytes.
+    """
     return private_key.private_bytes(
         encoding=Encoding.PEM,
         format=PrivateFormat.TraditionalOpenSSL,
@@ -124,23 +174,59 @@ def private_key_to_pem_bytes(
 def private_key_from_pem_bytes(
     pem_bytes: bytes, private_key_secret: bytes
 ) -> RSAPrivateKey:
-    """RSA private key from PEM bytes"""
+    """RSA private key from PEM bytes.
+
+    Args:
+        pem_bytes (bytes): Encrypted PEM-encoded private key bytes.
+        private_key_secret (bytes): Password for decrypting the private key.
+
+    Returns:
+        RSAPrivateKey: Decrypted RSA private key.
+    """
     return load_pem_private_key(pem_bytes, private_key_secret)
 
 
 def certificate_to_pem_bytes(certificate: Certificate) -> bytes:
-    """Certificate to PEM bytes"""
+    """Certificate to PEM bytes.
+
+    Args:
+        certificate (Certificate): X.509 certificate to convert.
+
+    Returns:
+        bytes: PEM-encoded certificate bytes.
+    """
     return certificate.public_bytes(Encoding.PEM)
 
 
 def certificate_from_pem_bytes(pem_bytes: bytes) -> Certificate:
-    """Certificate from PEM bytes"""
+    """Certificate from PEM bytes.
+
+    Args:
+        pem_bytes (bytes): PEM-encoded certificate bytes.
+
+    Returns:
+        Certificate: Parsed X.509 certificate.
+    """
     return load_pem_x509_certificate(pem_bytes)
 
 
 def _provide_private_key_secret(
     ask_password: bool = False, raise_if_generate: bool = False
 ) -> str:
+    """Provide private key secret.
+
+    Retrieves the private key secret from environment, user input, or generates a new one.
+
+    Args:
+        ask_password (bool): If True and secret not in environment, prompt user.
+        raise_if_generate (bool): If True, raise ValueError if no secret available.
+
+    Returns:
+        str: The private key secret.
+
+    Raises:
+        ValueError: If raise_if_generate is True and no secret can be obtained.
+    """
     # attempt to load the secret from the environment
     private_key_secret = getenv('GENERAPTOR_PK_SECRET')
     # interactively ask the user for the secret if necessary
@@ -161,6 +247,19 @@ def _generate_self_signed_certificate(
     ask_password: bool = False,
     private_key_secret: str | None = None,
 ) -> Certificate:
+    """Generate self-signed certificate.
+
+    Generates a self-signed certificate and saves the encrypted private key
+    and certificate to files in the output directory.
+
+    Args:
+        output_directory (Path): Directory to save key and certificate files.
+        ask_password (bool): If True, prompt for private key secret.
+        private_key_secret (str | None): Optional secret for encrypting private key.
+
+    Returns:
+        Certificate: Generated X.509 certificate.
+    """
     private_key, certificate = generate_private_key_and_certificate()
     # ensure output directory exists
     output_directory.mkdir(parents=True, exist_ok=True)
@@ -187,7 +286,19 @@ def provide_x509_certificate(
     ask_password: bool = False,
     private_key_secret: str | None = None,
 ) -> Certificate:
-    """Provide x509 certificate"""
+    """Provide x509 certificate.
+
+    Loads an existing certificate from a file or generates a new self-signed one.
+
+    Args:
+        output_directory (Path): Directory to save generated key and certificate files.
+        cert_filepath (Path | None): Optional path to existing certificate file.
+        ask_password (bool): If True, prompt for private key secret.
+        private_key_secret (str | None): Optional secret for encrypting private key.
+
+    Returns:
+        Certificate: X.509 certificate (loaded or newly generated).
+    """
     if cert_filepath and cert_filepath.is_file():
         certificate = certificate_from_pem_bytes(cert_filepath.read_bytes())
         _LOGGER.info(
@@ -204,7 +315,15 @@ def provide_x509_certificate(
 def load_private_key(
     private_key_path: Path, private_key_secret: str | None = None
 ) -> RSAPrivateKey | None:
-    """Load PEM encoded encrypted private key from file"""
+    """Load PEM encoded encrypted private key from file.
+
+    Args:
+        private_key_path (Path): Path to the encrypted private key file.
+        private_key_secret (str | None): Optional secret for decrypting the key.
+
+    Returns:
+        RSAPrivateKey | None: Loaded private key, or None if loading failed.
+    """
     try:
         private_key_secret = private_key_secret or _provide_private_key_secret(
             ask_password=True, raise_if_generate=True
@@ -220,7 +339,15 @@ def load_private_key(
 
 
 def decrypt_secret(private_key: RSAPrivateKey, b64_enc_secret: str) -> bytes:
-    """Decrypt a base64-encoded secret using given private key"""
+    """Decrypt a base64-encoded secret using given private key.
+
+    Args:
+        private_key (RSAPrivateKey): Private key for decryption.
+        b64_enc_secret (str): Base64-encoded secret to decrypt.
+
+    Returns:
+        bytes: Decrypted secret bytes.
+    """
     enc_secret = b64decode(b64_enc_secret)
     secret = private_key.decrypt(
         enc_secret,

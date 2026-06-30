@@ -1,4 +1,8 @@
-"""get-rules command"""
+"""get-rules command module.
+
+This module provides the CLI command for listing available rules,
+optionally filtered by profile or specific targets.
+"""
 
 from ..concept import (
     OperatingSystem,
@@ -13,6 +17,11 @@ _LOGGER = get_logger('command.get_rules')
 
 
 def _get_rules_cmd(args):
+    """Handle get-rules command execution.
+
+    Args:
+        args: Parsed command line arguments with opsystem, profile, and targets.
+    """
     opsystem = OperatingSystem(args.opsystem)
     if args.profile:
         profile_set = get_profile_set(args.cache, args.config, opsystem)
@@ -37,7 +46,11 @@ def _get_rules_cmd(args):
 
 
 def setup_cmd(cmd):
-    """Setup get-rules command"""
+    """Setup get-rules command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     get_rules = cmd.add_parser(
         'get-rules',
         help="get rules matching collection targets",

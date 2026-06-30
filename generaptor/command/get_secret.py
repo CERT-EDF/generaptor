@@ -1,4 +1,8 @@
-"""get-secret command"""
+"""get-secret command module.
+
+This module provides the CLI command for retrieving decrypted secrets
+from collection archives using private keys.
+"""
 
 from pathlib import Path
 
@@ -11,6 +15,12 @@ _LOGGER = get_logger('command.get_secret')
 
 
 def _print_collection_secret(private_key: RSAPrivateKey, filepath: Path):
+    """Print collection secret as JSON.
+
+    Args:
+        private_key (RSAPrivateKey): Private key for decrypting the secret.
+        filepath (Path): Path to the collection archive file.
+    """
     collection = Collection(filepath=filepath)
     _LOGGER.info(
         "collection certificate fingerprint: %s", collection.fingerprint
@@ -24,6 +34,11 @@ def _print_collection_secret(private_key: RSAPrivateKey, filepath: Path):
 
 
 def _get_secret_cmd(args):
+    """Handle get-secret command execution.
+
+    Args:
+        args: Parsed command line arguments with private_key and collections paths.
+    """
     try:
         private_key = load_private_key(args.private_key)
     except ValueError:
@@ -43,7 +58,11 @@ def _get_secret_cmd(args):
 
 
 def setup_cmd(cmd):
-    """Setup get-secret command"""
+    """Setup get-secret command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     get_secret = cmd.add_parser(
         'get-secret', help="get the collection archive secret"
     )

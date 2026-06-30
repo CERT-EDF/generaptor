@@ -1,4 +1,8 @@
-"""refresh command"""
+"""refresh command module.
+
+This module provides the CLI command for updating the cache and fetching
+Velociraptor binaries from GitHub releases.
+"""
 
 from ..concept import SUPPORTED_DISTRIBUTIONS
 from ..helper.github import github_release
@@ -10,6 +14,11 @@ _FETCH_TAG_DEFAULT = 'v0.77'
 
 
 def _update_cmd(args):
+    """Handle update command execution.
+
+    Args:
+        args: Parsed command line arguments with cache, fetch_tag, and proxy settings.
+    """
     _LOGGER.info("updating...")
     args.cache.update(args.do_not_fetch)
     _LOGGER.info("cache updated.")
@@ -43,7 +52,11 @@ def _update_cmd(args):
 
 
 def setup_cmd(cmd):
-    """Setup update command"""
+    """Setup update command.
+
+    Args:
+        cmd: argparse subparsers object to add the command to.
+    """
     update = cmd.add_parser('update', help="update config and fetch binaries")
     update.add_argument(
         '--do-not-fetch',
