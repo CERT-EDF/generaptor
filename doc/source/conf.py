@@ -1,19 +1,20 @@
 import os
 import sys
 from pathlib import Path
+from generaptor.__version__ import version
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 project = 'Generaptor'
 copyright = '2025, CERT-EDF'
 author = 'CERT-EDF'
-release = '16.0.0'
+release = version
+print(version)
 
 extensions = [
-#    'sphinx.ext.autodoc',
+    'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
-#    'myst_parser',
 ]
 
 language = 'en'
@@ -34,26 +35,20 @@ napoleon_use_rtype = True
 
 add_module_names = False
 
-#autodoc_class_signature = 'separated'
-#autodoc_default_options = {
-#    'members': True,
-#    'member-order': 'bysource',
-#    'special-members': '__init__',
-#    'undoc-members': False,
-#    'exclude-members': '__weakref__',
-#    'show-inheritance': True,
-#}
-#autodoc_docstring_signature = True
-#autodoc_inherit_docstrings = False
-#autodoc_typehints = 'description'
-#autodoc_typehints_description_target = 'documented'
-#autodoc_typehints_format = 'short'
-
-#myst_enable_extensions = [
-#    'colon_fence',
-#    'deflist',
-#    'fieldlist',
-#]
+autodoc_class_signature = 'separated'
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'special-members': '__init__',
+    'undoc-members': False,
+    'exclude-members': '__weakref__',
+    'show-inheritance': True,
+}
+autodoc_docstring_signature = True
+autodoc_inherit_docstrings = False
+autodoc_typehints = 'description'
+autodoc_typehints_description_target = 'documented'
+autodoc_typehints_format = 'short'
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
