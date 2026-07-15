@@ -59,12 +59,11 @@ include = ["generaptor", "generaptor.*"]
 version_file = "generaptor/__version__.py"
 
 
-[tool.black]
+[tool.ruff]
+include = ["pyproject.toml", "generaptor/**/*.py"]
+exclude = ["generaptor/__version__.py"]
 line-length = 79
-target-version = ["py312"]
-skip-string-normalization = true
 
 
-[tool.isort]
-profile = "black"
-line_length = 79
+[tool.ruff.format]
+quote-style = "preserve"
