@@ -23,7 +23,7 @@ dependencies = [
     "rich~=15.0",
     "jinja2~=3.1",
     "pyzipper~=0.4",
-    "cryptography~=48.0",
+    "cryptography~=49.0",
 ]
 
 
@@ -46,7 +46,7 @@ generaptor = "generaptor.main:app"
 
 
 [build-system]
-requires = ["setuptools>=82", "setuptools_scm>=9.2", "wheel"]
+requires = ["setuptools>=83", "setuptools_scm>=10", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
