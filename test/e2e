@@ -21,7 +21,7 @@ function g {
 if [ ! -d "${DIR}"/cache/program ]; then
     g update
 fi
-g update --do-not-fetch
+g update --no-download
 mkdir "${DIR}"/config/linux
 # -----------------------------------------------------------------------------
 # generaptor get-rules tests

@@ -7,7 +7,41 @@ and asset details from GitHub repositories.
 from dataclasses import dataclass
 from operator import attrgetter
 
+from semver import Version
+
 from .http import http_get_json
+
+
+def version_from_tag(tag: str) -> Version:
+    """Best effort parsing for non semver tag names.
+
+    Args:
+        tag (str): Tag or version to convert to semver Version.
+
+    Returns:
+        Version: Version resulting from parsing.
+    """
+    tag = tag.lstrip('v')
+    if tag.count('.') == 1:
+        tag += '.0'
+    return Version.parse(tag)
+
+
+def is_compatible(a: Version, b: Version) -> bool:
+    """Determine if version a and b are compatible.
+
+    Args:
+        a (Version): From version
+        b (Version): To version
+
+    Returns:
+        True if versions are theorically compatible else False
+    """
+    if a.major == b.major == 0:
+        s_a = Version(a.minor, a.patch, 0)
+        s_b = Version(b.minor, b.patch, 0)
+        return s_a.is_compatible(s_b)
+    return a.is_compatible(b)
 
 
 @dataclass
@@ -37,12 +71,12 @@ class GithubRelease:
 
     Attributes:
         name (str): Name of the release.
-        tag (str): Tag name of the release.
+        version (Version): Version of the release.
         assets (list[GithubAsset]): List of assets in this release, sorted by creation date.
     """
 
     name: str
-    tag: str
+    version: Version
     assets: list[GithubAsset]
 
     @classmethod
@@ -57,7 +91,7 @@ class GithubRelease:
         """
         return cls(
             name=dct['name'],
-            tag=dct['tag_name'],
+            version=version_from_tag(dct['tag_name']),
             assets=sorted(
                 [
                     GithubAsset(
@@ -74,31 +108,29 @@ class GithubRelease:
         )
 
 
-def github_release(
-    owner: str, repository: str, tag: str = 'latest'
-) -> GithubRelease | None:
-    """Get a summary of the latest release published in a Github repository.
+def github_releases(
+    owner: str, repository: str, version: Version
+) -> list[GithubRelease]:
+    """Get a list of all compatible releases ordered by version desc.
 
     Args:
         owner (str): Repository owner/organization name.
         repository (str): Repository name.
-        tag (str): Release tag to fetch. Defaults to 'latest' for most recent non-draft release.
+        version (Version): Release version to fetch (including latest patches).
 
     Returns:
-        GithubRelease | None: GitHub release information, or None if not found.
+        list[GithubRelease]: Matched GitHub releases, empty if no matching release found.
     """
-    page = 1
-    while page:
-        url = f'https://api.github.com/repos/{owner}/{repository}/releases?per_page=10&page={page}'
-        releases = http_get_json(url)
-        if not releases:
-            return None
-        for release in releases:
-            if release['draft'] or release['prerelease']:
-                continue
-            if tag == 'latest':
-                return GithubRelease.from_dict(release)
-            if tag == release['tag_name']:
-                return GithubRelease.from_dict(release)
-        page += 1
-    return None
+    releases = []
+    url = f'https://api.github.com/repos/{owner}/{repository}/releases?per_page=50'
+    body = http_get_json(url)
+    if not body:
+        return []
+    for release in body:
+        if release['draft'] or release['prerelease']:
+            continue
+        release = GithubRelease.from_dict(release)
+        if not is_compatible(version, release.version):
+            continue
+        releases.append(release)
+    return list(sorted(releases, key=attrgetter('version'), reverse=True))

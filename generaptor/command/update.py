@@ -4,51 +4,58 @@ This module provides the CLI command for updating the cache and fetching
 Velociraptor binaries from GitHub releases.
 """
 
+from semver import Version
+
 from ..concept import SUPPORTED_DISTRIBUTIONS
-from ..helper.github import github_release
+from ..helper.github import github_releases, version_from_tag
 from ..helper.http import http_download, http_set_proxies
 from ..helper.logging import get_logger
 
 _LOGGER = get_logger('command.update')
-_FETCH_TAG_DEFAULT = 'v0.77'
+_DEFAULT_VERSION = Version(0, 77, 0)
 
 
 def _update_cmd(args):
     """Handle update command execution.
 
     Args:
-        args: Parsed command line arguments with cache, fetch_tag, and proxy settings.
+        args: Parsed command line arguments with cache, download flag, version, and proxy settings.
     """
     _LOGGER.info("updating...")
-    args.cache.update(args.do_not_fetch)
+    args.cache.update(args.no_download)
     _LOGGER.info("cache updated.")
-    if args.do_not_fetch:
+    if args.no_download:
         return
-    _LOGGER.info("downloading %s release...", args.fetch_tag)
+    _LOGGER.info("searching for releases related to %s", args.version)
     if args.proxy_url:
         http_set_proxies({'https': args.proxy_url})
-    gh_release = github_release('velocidex', 'velociraptor', args.fetch_tag)
-    if not gh_release:
+    gh_releases = github_releases('velocidex', 'velociraptor', args.version)
+    if not gh_releases:
         _LOGGER.error(
-            "failed to find a valid realease for tag: %s", args.fetch_tag
+            "failed to find a release matching version %s", args.version
         )
         return
-    _LOGGER.info("velociraptor release matched: %s", gh_release.tag)
     downloaded = set()
-    for asset in gh_release.assets:
-        for distrib in SUPPORTED_DISTRIBUTIONS:
-            if distrib in downloaded:
-                continue
-            if not distrib.match_asset_name(asset.name):
-                continue
-            downloaded.add(distrib)
-            _LOGGER.info(
-                "%s matched asset '%s' (size=%d)",
-                distrib,
-                asset.name,
-                asset.size,
-            )
-            http_download(asset.url, args.cache.path(asset.url.split('/')[-1]))
+    for gh_release in gh_releases:
+        _LOGGER.info(
+            "searching for required assets in release %s", gh_release.version
+        )
+        for asset in gh_release.assets:
+            for distrib in SUPPORTED_DISTRIBUTIONS:
+                if distrib in downloaded:
+                    continue
+                if not distrib.match_asset_name(asset.name):
+                    continue
+                downloaded.add(distrib)
+                _LOGGER.info(
+                    "%s matched asset '%s' (size=%d)",
+                    distrib,
+                    asset.name,
+                    asset.size,
+                )
+                http_download(
+                    asset.url, args.cache.path(asset.url.split('/')[-1])
+                )
 
 
 def setup_cmd(cmd):
@@ -59,17 +66,18 @@ def setup_cmd(cmd):
     """
     update = cmd.add_parser('update', help="update config and fetch binaries")
     update.add_argument(
-        '--do-not-fetch',
+        '--no-download',
         action='store_true',
-        help="do not fetch velociraptor binaries",
+        help="do not download velociraptor binaries",
     )
     update.add_argument(
-        '--fetch-tag',
-        default=_FETCH_TAG_DEFAULT,
+        '--version',
+        type=version_from_tag,
+        default=_DEFAULT_VERSION,
         help=(
-            "fetch this tag, use 'latest' to fetch the latest version. "
-            "Caution, fecthing another version than the default might "
-            f"break the collector. Default tag is {_FETCH_TAG_DEFAULT}"
+            "Velociraptor version to download. Caution, downloading "
+            "another version than the default may break the collector. "
+            f"Default version is {_DEFAULT_VERSION}"
         ),
     )
     update.add_argument('--proxy-url', help="set proxy url")
