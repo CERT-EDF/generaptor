@@ -31,9 +31,9 @@ def _check_same_fingerprint(collections: CollectionList, private_key: Path):
         _LOGGER.error("found: %s", fingerprints)
         return False
     fingerprint = fingerprints.pop()
-    if not private_key.name.startswith(fingerprint):
+    if fingerprint not in private_key.name:
         _LOGGER.error("given key does not match given collections fingerprint")
-        _LOGGER.error("expected: %s", fingerprint)
+        _LOGGER.error("expected to find '%s' in '%s'", fingerprint, private_key.name)
         return False
     return True
 
